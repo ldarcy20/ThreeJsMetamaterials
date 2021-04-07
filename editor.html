@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/editor.css">
+</head>
+<body id = "body">
+    <div class="dropdown">
+        <button class="dropbtn">Radius</button>
+        <div class="dropdown-content">
+          <a href="#" id="circleScale1"> .1 </a>
+          <a href="#" id="circleScale2"> .2 </a>
+          <a href="#" id="circleScale4"> .4 </a>
+        </div>
+      </div>
+    <button class="buttons sketch" id="sketchButton" onClick="toggleSketchMode()">Sketch</button> 
+    <button class="buttons resizeBoxes" id="selectResizeBoxesMode" onClick="toggleResiszeBoxesMode()">Adjust Boxes Mode</button>
+    <button class="buttons save" id="saveButton" onClick="saveScene()">Save</button> 
+    <button class="buttons load" id="loadButton" onClick="loadScene()">Load</button>
+    <div class="dropdown2">
+        <button class="dropbtn2">Elasticity</button>
+        <div class="dropdown-content2">
+            <a href="#" id="elasticity10"> 10 </a>
+            <a href="#" id="elasticity20"> 20 </a>
+            <a href="#" id="elasticity30"> 30 </a>
+        </div>
+    </div>  
+    <script src="js/three.js"></script>
+    <script src="js/sketchMode.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <!-- <iframe id="viewer" name="viewer" src="thingy.js" allowfullscreen allowvr onmousewheel=""></iframe> -->
+    <script src="sketchMode.js"></script>
+    <script src="thingy.js"></script>
+    <script src="home.js"></script>
+    
+
+
+    </script>
+</body>
+</html>
