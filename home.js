@@ -1,5 +1,6 @@
 init();
 function init() {
+    console.log("Home Page");
     var fileSelector = document.createElement('input');
     fileSelector.setAttribute('type', 'file');
 
