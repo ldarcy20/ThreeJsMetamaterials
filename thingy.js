@@ -29,6 +29,7 @@ var raycaster = new THREE.Raycaster();
 var raycasterInRadius = []
 var vector, dir, distance, pos;
 var elasticity = 0
+var elasticityObjects = []
 
 var sketchPlane, intersects;
 
@@ -41,6 +42,10 @@ animate();
 
 
 function init() {
+    for(var i = 10; i < 40; i += 10) {
+        elasticityObjects[i] = []
+    }
+
     var buttons = document.getElementsByTagName("button");
 
     scene = new THREE.Scene();

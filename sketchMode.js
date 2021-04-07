@@ -45,7 +45,6 @@ function updateSketchTrail() {
     if(sketchMode) {
         for ( let i = 0; i < intersects.length; i ++ ) {
 		    if( intersects[i].object.name == "Sketch Plane") {
-                //console.log("Here");
                 cursorCircle.position.set(intersects[i].point.x, .05, intersects[i].point.z);
             }
 	    }
@@ -74,7 +73,8 @@ function findGridOverlap(objectsOverlapped) {
         if(leftClickPressed) {
             for(var i = 0; i < objectsOverlapped.length; i++) {
                 if(intersects[i].object.name == "Grid Box" && intersects[i].object.material.transparent) {
-                    
+                    elasticityObjects[elasticity] = intersects[i].object; //add elasticity object to datastructure
+
                     intersects[ i ].object.material.transparent = false;
                     intersects[ i ].object.material.opacity = 1;
                     if(elasticity == 10) intersects[i].object.material.color.setHex(0xFF0000);
@@ -86,6 +86,10 @@ function findGridOverlap(objectsOverlapped) {
         if(rightClickPressed) {
             for(var i = 0; i < objectsOverlapped.length; i++) {
                 if(intersects[i].object.name == "Grid Box") {
+                    elasticityObjects[elasticity] = [];
+                    console.log(elasticityObjects[elasticity]);
+                    elasticityObjects[elasticity].splice(elasticityObjects[elasticity].indexOf(intersects[i].object), 1);
+                    elasticityObjects[elasticity] = intersects[i].object;
                     intersects[ i ].object.material.transparent = true;
                     intersects[ i ].object.material.opacity = 0;
                 }
