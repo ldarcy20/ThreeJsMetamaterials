@@ -1,0 +1,24 @@
+{
+  "name": "threejsmetamaterials",
+  "version": "1.0.0",
+  "description": "idk",
+  "main": "example1.js",
+  "dependencies": {
+    "three": "^0.126.1",
+    "uniq": "^1.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ldarcy20/ThreeJsMetamaterials.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ldarcy20/ThreeJsMetamaterials/issues"
+  },
+  "homepage": "https://github.com/ldarcy20/ThreeJsMetamaterials#readme"
+}

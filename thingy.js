@@ -30,6 +30,7 @@ var raycasterInRadius = []
 var vector, dir, distance, pos;
 var elasticity = 0
 var elasticityObjects = []
+var file;
 
 var sketchPlane, intersects;
 
@@ -45,6 +46,8 @@ function init() {
     for(var i = 10; i < 40; i += 10) {
         elasticityObjects[i] = []
     }
+
+    
 
     var buttons = document.getElementsByTagName("button");
 
@@ -221,8 +224,29 @@ function saveScene() {
 
 
 }
+function promptFileExplorer() {
+    var input = document.createElement('input');
+    input.type = 'file';
 
-function loadScene() {
+    input.onchange = e => { 
+        var file = e.target.files[0];
+        loadScene(file);
+    }
+
+    input.click();
+}
+
+function loadScene(file) {
+    const fs = require('fs')
+
+    console.log(file.name)
+    fs.readFile(file.name, 'utf8', (err, jsonString) => {
+        if (err) {
+            console.log("File read failed:", err)
+            return
+        }
+        console.log('File data:', jsonString) 
+    })
     var request = new XMLHttpRequest();
     request.open("GET", "saved_files/testFileJson.json", false);
     request.send(null)
