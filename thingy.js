@@ -229,27 +229,29 @@ function promptFileExplorer() {
 
     input.onchange = e => { 
         var file = e.target.files[0];
-        loadScene(file);
+        console.log(file);
+        loadFile(file);
     }
 
     input.click();
 }
 
-function loadScene(file) {
-    const fs = require('fs')
+function loadFile(file) {
+    var thingy;
+    const reader = new FileReader();
+        reader.addEventListener('load', (event) => {
+            thingy = event.target.result;
+            loadScene(thingy);
+    });
+    reader.readAsText(file);
+}
 
-    console.log(file.name)
-    fs.readFile(file.name, 'utf8', (err, jsonString) => {
-        if (err) {
-            console.log("File read failed:", err)
-            return
-        }
-        console.log('File data:', jsonString) 
-    })
+function loadScene(file) {
     var request = new XMLHttpRequest();
     request.open("GET", "saved_files/testFileJson.json", false);
     request.send(null)
-    var my_JSON_object = JSON.parse(request.responseText);
+    console.log(file);
+    var my_JSON_object = JSON.parse(file);
     console.log(my_JSON_object);
     scene = new THREE.ObjectLoader().parse(my_JSON_object);
 
