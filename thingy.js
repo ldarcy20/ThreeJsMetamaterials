@@ -1,5 +1,4 @@
-
-//https://mrdoob.com/projects/voxels/#A/alnSdYeafiacdaehahc
+https://mrdoob.com/projects/voxels/#A/alnSdYeafiacdaehahc
 var scene, renderer, camera;
 var cameraCenter = new THREE.Vector3();
 var cameraHorzLimit = 10;
@@ -292,4 +291,3 @@ function disableRightClickMenu(event) {
     console.log("Here");
     return false;
 }
-
