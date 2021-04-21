@@ -31,6 +31,9 @@ var elasticity = 0
 var elasticityObjects = []
 var file;
 
+var gridSizeX = 20;
+var gridSizeY = 20;
+
 var sketchPlane, intersects;
 
 var sketchMode = false;
@@ -48,7 +51,6 @@ function init() {
 
     
 
-    var buttons = document.getElementsByTagName("button");
 
     scene = new THREE.Scene();
 
@@ -119,12 +121,9 @@ function init() {
     document.getElementById('circleScale1').onclick = () => {changeCircleScale(1)};
     document.getElementById('circleScale2').onclick = () => {changeCircleScale(2)};
     document.getElementById('circleScale4').onclick = () => {changeCircleScale(4)};
-    document.getElementById('elasticity10').onclick = () => {changeElasticity(10)};
-    document.getElementById('elasticity20').onclick = () => {changeElasticity(20)};
-    document.getElementById('elasticity30').onclick = () => {changeElasticity(30)};
     
 
-    createGrid(20, 20, .25)
+    createGrid(gridSizeX, gridSizeY, .25)
 
     
 }
@@ -169,10 +168,7 @@ function onDocumentMouseMove(event) {
     raycasterInRadius[2].setFromCamera(new THREE.Vector2(mouse.x, mouse.y + cursorCircleRadius/8), camera);	
     raycasterInRadius[3].setFromCamera(new THREE.Vector2(mouse.x, mouse.y - cursorCircleRadius/8), camera);	
 	intersects = raycaster.intersectObjects(scene.children).concat(raycasterInRadius[0].intersectObjects(scene.children)).concat(raycasterInRadius[1].intersectObjects(scene.children)).concat(raycasterInRadius[2].intersectObjects(scene.children)).concat(raycasterInRadius[3].intersectObjects(scene.children));
-    for(var i = 0; i < intersects.length; i++) {
-        //console.log(intersects[i].object.name)
-    }
-
+    
     vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
     vector.unproject( camera );
 
@@ -185,7 +181,8 @@ function onDocumentMouseMove(event) {
 
 }
 function addEventListeners() {
-    document.addEventListener('mousedown', (e) => {
+    var cc = document.getElementsByTagName("canvas");
+    cc[0].addEventListener('mousedown', (e) => {
         e = e || window.event;
         e.preventDefault();
         if(e.which == 1) {
@@ -273,7 +270,6 @@ function save( blob, filename ) {
 }
 
 function saveString( text, filename ) {
-
 	save( new Blob( [ text ], { type: 'application/json' } ), filename );
 
 }
@@ -290,6 +286,31 @@ function makeid(length) {
 
 function disableRightClickMenu(event) {
     event.preventDefault();
-    console.log("Here");
     return false;
+}
+function numOfIslandsDFS(row, col, visited, boxElasticity) {
+    if (row < 0 || col < 0 || row >= gridSizeX || col >= gridSizeY || boxGeoList[row + col * gridSizeY].material.opacity != 1 || visited[row + col * gridSizeY] == 1 || boxGeoList[row + col * gridSizeY].material.name != boxElasticity)
+            return visited;
+    visited[row + col * gridSizeY] = 1; //marking it visited
+    visited = numOfIslandsDFS(row+ 1, col, visited, boxElasticity); // go right
+    visited = numOfIslandsDFS(row- 1, col, visited, boxElasticity); //go left
+    visited = numOfIslandsDFS(row, col + 1, visited, boxElasticity); //go down
+    visited = numOfIslandsDFS(row, col - 1, visited, boxElasticity); // go up
+    return visited;
+}
+
+
+function numOfIslands() {
+    var visited = []
+    var islands = 0;
+    for(var x = 0; x < gridSizeX; x++) {
+        for(var y = 0; y < gridSizeY; y++) {
+            if(boxGeoList[x + y * gridSizeY].material.opacity == 1 && visited[x + y * gridSizeY] != 1) {
+                visited = numOfIslandsDFS(x, y, visited, boxGeoList[x + y * gridSizeY].material.name);
+                islands++;
+            }
+        }
+    }
+    console.log("Number of Islands: " + islands);
+    return islands;
 }

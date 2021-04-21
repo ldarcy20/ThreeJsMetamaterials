@@ -20,25 +20,13 @@
     <button class="buttons resizeBoxes" id="selectResizeBoxesMode" onClick="toggleResiszeBoxesMode()">Adjust Boxes Mode</button>
     <button class="buttons save" id="saveButton" onClick="saveScene()">Save</button> 
     <button class="buttons load" id="loadButton" onClick="promptFileExplorer()">Load</button>
-    <div class="dropdown2">
-        <button class="dropbtn2">Elasticity</button>
-        <div class="dropdown-content2">
-            <a href="#" id="elasticity10"> 10 </a>
-            <a href="#" id="elasticity20"> 20 </a>
-            <a href="#" id="elasticity30"> 30 </a>
-        </div>
-    </div>  
+    <input class = "elasticityField" name="elasticityTxt" type="text" maxlength="10" id="elasticityText"/>
+    <button class="buttons elasticity" id="elasticityButton" onClick="updateElasticity()">Submit</button>
     <script src="js/three.js"></script>
     <script src="js/sketchMode.js"></script>
     <script src="js/OrbitControls.js"></script>
     <script src="js/ammo.js"></script>
     <!-- <iframe id="viewer" name="viewer" src="thingy.js" allowfullscreen allowvr onmousewheel=""></iframe> -->
-    <script data-main="js/config" src="js/requirejs.js"></script>
-    <script>
-        require(['config'], function() {
-
-        });
-    </script>
 
     <script src="sketchMode.js"></script>
     <script src="thingy.js"></script>

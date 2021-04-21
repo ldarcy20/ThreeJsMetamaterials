@@ -21,22 +21,18 @@ function createBox(point1, point2) {
     var halfY = (Math.max(point1.y, point2.y) - Math.min(point1.y, point2.y))/2
     planeMesh.position.set(Math.max(point1.x, point2.x) - halfX, -.0005, Math.max(point1.y, point2.y) - halfY)
     planeMesh.name = "Grid Box"
+    planeMesh.material.name = elasticity
     scene.add(line1Mesh)
     scene.add(planeMesh)
-    return {
-        line1Mesh,
-
-    };
+    return planeMesh
 }
 function createGrid(xBoxNum, yBoxNum, boxWidth) {
     startingX = (xBoxNum/2) * -boxWidth
     startingY = (yBoxNum/2) * -boxWidth 
-    var acc = 0;
     for(var x = 0; x < xBoxNum; x++) {
         for(var y = 0; y < yBoxNum; y++) {
-           createBox(new THREE.Vector2(startingX + (x * boxWidth), startingY + (y * boxWidth)),
+           boxGeoList[x + y * yBoxNum] = createBox(new THREE.Vector2(startingX + (x * boxWidth), startingY + (y * boxWidth)),
                      new THREE.Vector2(startingX + ((x + 1) * boxWidth), startingY + ((y + 1) * boxWidth)));
-            acc++;
         }
     }
 }
@@ -52,8 +48,8 @@ function updateSketchTrail() {
 }
 
 function toggleSketchMode() {
+    numOfIslands();
     sketchMode = !sketchMode;
-    console.log("Toggled sketch Mode");
     if(sketchMode){
         scene.add(cursorCircle);
         document.getElementById('body').classList.add("RemoveCursor");
@@ -77,9 +73,10 @@ function findGridOverlap(objectsOverlapped) {
 
                     intersects[ i ].object.material.transparent = false;
                     intersects[ i ].object.material.opacity = 1;
-                    if(elasticity == 10) intersects[i].object.material.color.setHex(0xFF0000);
-                    else if(elasticity == 20) intersects[i].object.material.color.setHex(0x00FF00);
-                    else if(elasticity == 30) intersects[i].object.material.color.setHex(0x0000FF);
+                    intersects[ i].object.material.name = elasticity;
+                    if(elasticity == 10) intersects[i].object.material.color.setHex(hsvToRgb(0, 1, 1));
+                    else if(elasticity == 20) intersects[i].object.material.color.setHex(hsvToRgb((120/360), 1, 1));
+                    else if(elasticity == 30) intersects[i].object.material.color.setHex(hsvToRgb((240/360), 1, 1));
                 }
             }
         }
@@ -87,7 +84,6 @@ function findGridOverlap(objectsOverlapped) {
             for(var i = 0; i < objectsOverlapped.length; i++) {
                 if(intersects[i].object.name == "Grid Box") {
                     elasticityObjects[elasticity] = [];
-                    console.log(elasticityObjects[elasticity]);
                     elasticityObjects[elasticity].splice(elasticityObjects[elasticity].indexOf(intersects[i].object), 1);
                     elasticityObjects[elasticity] = intersects[i].object;
                     intersects[ i ].object.material.transparent = true;
@@ -102,11 +98,30 @@ function changeCircleScale(scaleRadius) {
     cursorCircleRadius = scaleRadius/10;
     cursorCircle.scale.set(scaleRadius, scaleRadius);
 }
+function updateElasticity() {
+    elasticity = document.getElementById("elasticityText").value;
+}
 function changeElasticity(elasticityVal) {
     elasticity = elasticityVal
 }
 
-function circleRectangleIntersect(circleCenter, edge1, edge2, edge3, edge4) {
-    //Check if circleCenter is in Rectangle
-
+function hsvToRgb(h, s, v) {
+    var r, g, b, i, f, p, q, t;
+    if (arguments.length === 1) {
+        s = h.s, v = h.v, h = h.h;
+    }
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+    return (Math.round(r * 255) * Math.pow(16, 4) + Math.round(g * 255) * Math.pow(16, 2) + Math.round(b * 255));
 }
