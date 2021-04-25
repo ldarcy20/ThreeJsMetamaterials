@@ -71,12 +71,10 @@ function findGridOverlap(objectsOverlapped) {
                 if(intersects[i].object.name == "Grid Box" && intersects[i].object.material.transparent) {
                     elasticityObjects[elasticity] = intersects[i].object; //add elasticity object to datastructure
 
-                    intersects[ i ].object.material.transparent = false;
-                    intersects[ i ].object.material.opacity = 1;
-                    intersects[ i].object.material.name = elasticity;
-                    if(elasticity == 10) intersects[i].object.material.color.setHex(hsvToRgb(0, 1, 1));
-                    else if(elasticity == 20) intersects[i].object.material.color.setHex(hsvToRgb((120/360), 1, 1));
-                    else if(elasticity == 30) intersects[i].object.material.color.setHex(hsvToRgb((240/360), 1, 1));
+                    intersects[i].object.material.transparent = false;
+                    intersects[i].object.material.opacity = 1;
+                    intersects[i].object.material.name = elasticity;
+                    intersects[i].object.material.color.setHex(hsvToRgb((elasticity/100), 1, 1));
                 }
             }
         }
@@ -99,7 +97,37 @@ function changeCircleScale(scaleRadius) {
     cursorCircle.scale.set(scaleRadius, scaleRadius);
 }
 function updateElasticity() {
+    var isInList = false;
     elasticity = document.getElementById("elasticityText").value;
+    for(var i = 0; i < allElasticities.length; i++) {
+        if(elasticity == allElasticities[i]) {
+            isInList = true;
+        }
+    }
+    if(!isInList) {
+        allElasticities.push(elasticity);
+        var nextText = document.createElement("text");
+        var textValue = document.createTextNode((elasticity.toString()).concat(": "));
+        nextText.appendChild(textValue);
+        nextText.style.position = "absolute";
+        nextText.style.left = "1720px";
+        var yLoc = 40 + (20*allElasticities.length)
+        var yLocString = yLoc.toString();
+        nextText.style.top = yLocString.concat("px");
+
+        var nextBox = document.createElement("div");
+        nextBox.style.position = "absolute";
+        nextBox.style.left = "1760px";
+        nextBox.style.height = "20px";
+        nextBox.style.width = "20px";
+        nextBox.style.top = yLocString.concat("px");
+        nextBox.style.backgroundColor = "#".concat(fixString((hsvToRgb((elasticity/100), 1, 1)).toString(16)));
+
+        var docElement = document.getElementById("body");
+        var child = document.getElementById("legendText");
+        docElement.insertBefore(nextText, child);
+        docElement.insertBefore(nextBox, child);
+    }
 }
 function changeElasticity(elasticityVal) {
     elasticity = elasticityVal
@@ -124,4 +152,12 @@ function hsvToRgb(h, s, v) {
         case 5: r = v, g = p, b = q; break;
     }
     return (Math.round(r * 255) * Math.pow(16, 4) + Math.round(g * 255) * Math.pow(16, 2) + Math.round(b * 255));
+}
+
+function fixString(hexString) {
+    while(hexString.length < 6) {
+        hexString = ("0").concat(hexString)
+    }
+
+    return hexString;
 }

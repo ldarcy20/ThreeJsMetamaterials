@@ -1,5 +1,6 @@
 //variable declaration section
 let physicsWorld, scene, camera, renderer, rigidBodies = [], tmpTrans = null
+let prevVelocityY = 0;
 
 //Ammojs Initialization
 Ammo().then(start)
@@ -210,4 +211,42 @@ function updatePhysics( deltaTime ){
         }
     }
 
+    if(rigidBodies[0].userData.physicsBody.getLinearVelocity().y() < -1) {
+        prevVelocityY = rigidBodies[0].userData.physicsBody.getLinearVelocity().y();
+    }
+
+    detectCollision(rigidBodies[0].userData.physicsBody, prevVelocityY);
+
+}
+function detectCollision(ball, prevVelocityY){
+
+	let dispatcher = physicsWorld.getDispatcher();
+	let numManifolds = dispatcher.getNumManifolds();
+	for ( let i = 0; i < numManifolds; i ++ ) {
+
+		let contactManifold = dispatcher.getManifoldByIndexInternal( i );
+		let numContacts = contactManifold.getNumContacts();
+
+		for ( let j = 0; j < numContacts; j++ ) {
+
+			let contactPoint = contactManifold.getContactPoint( j );
+			let distance = contactPoint.getDistance();
+
+			console.log({manifoldIndex: i, contactIndex: j, distance: distance});
+            console.log("Previous Velocity: " + prevVelocityY)
+            setBallVelocity(ball, 0, -prevVelocityY, 0);
+
+
+		}
+
+
+	}
+
+}
+
+
+function setBallVelocity(body,x,y,z){
+    var velocityVal = new Ammo.btVector3();
+    velocityVal.setValue(x,.9 * y,z);
+    body.setLinearVelocity(velocityVal);
 }

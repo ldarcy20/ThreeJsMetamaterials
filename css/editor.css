@@ -79,8 +79,29 @@ body {
   }
   .elasticityField {
     position: absolute;
-    left:400px;
-    top:20px;
+    left:1272px;
+    top:110px;
     width: 50px;
   }
+  .square {
+    position: absolute;
+    left: 1200px;
+    top:20px;
+    height: 200px;
+    width: 200px;
+    border-radius:20px;
+    background-color: #add8e6;
+  }
 
+  .HSVimg {
+    position:absolute;
+    left:1200px;
+    top: 20px;
+    height: 200px;
+  }
+  
+  .wheelLine{
+    stroke:#FF0000;
+    display: inline-block;
+    stroke-width:2;
+  }

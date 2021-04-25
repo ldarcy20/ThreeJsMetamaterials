@@ -28,6 +28,7 @@ var raycaster = new THREE.Raycaster();
 var raycasterInRadius = []
 var vector, dir, distance, pos;
 var elasticity = 0
+var allElasticities = []
 var elasticityObjects = []
 var file;
 
@@ -55,7 +56,7 @@ function init() {
     scene = new THREE.Scene();
 
     renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setClearColor("#e5e5e5");
+    renderer.setClearColor("#f5f5f5");
     renderer.setSize(window.innerWidth,window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
@@ -117,7 +118,7 @@ function init() {
 
     document.addEventListener('mousemove', updateCamera, false);
     document.addEventListener('mousemove', onDocumentMouseMove, false);
-    // document.addEventListener('contextmenu', disableRightClickMenu, false);
+    document.getElementById('color selector').addEventListener('mousedown', colorSelector, false);
     document.getElementById('circleScale1').onclick = () => {changeCircleScale(1)};
     document.getElementById('circleScale2').onclick = () => {changeCircleScale(2)};
     document.getElementById('circleScale4').onclick = () => {changeCircleScale(4)};
@@ -313,4 +314,28 @@ function numOfIslands() {
     }
     console.log("Number of Islands: " + islands);
     return islands;
+}
+function colorSelector(e) {
+    var style = window.getComputedStyle(document.getElementById("color selector"))
+    var midX = parseInt(style.getPropertyValue('left'), 10) + 100;
+    var midY = parseInt(style.getPropertyValue('top'), 10) + 100;
+    var x = e.clientX - midX; //x position within the element.
+    var y = e.clientY - midY;  //y position within the element.
+
+    var distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+    if(distance > 50 && distance < 80) {
+        var angle = 0;
+        if(y > 0) {
+            angle = toDegrees(Math.atan2(y, x));
+        } else {
+            angle = toDegrees(Math.atan2(y, x)) + 360;
+        }
+        angle = angle + 90;
+        if (angle > 360) angle = angle - 360;
+        console.log(angle);
+    } else if (distance >= 80) {
+        
+    } else {
+
+    }
 }
