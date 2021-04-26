@@ -24,8 +24,9 @@
     <img class = "HSVimg" src="photos/HSVCircle.png" id="color selector">
     <input class = "elasticityField" name="elasticityTxt" type="text" maxlength="10" id="elasticityText"/>
     <button class="buttons elasticity" id="elasticityButton" onClick="updateElasticity()">Submit</button>
-
-
+    <svg height="2000" width="2000" style="position:absolute; pointer-events: none">
+      <line id="colorWheelLine" class = "wheelLine" x1="0" y1="0" x2="0" y2="0"/>
+    </svg>
     <script src="js/three.js"></script>
     <script src="js/sketchMode.js"></script>
     <script src="js/OrbitControls.js"></script>

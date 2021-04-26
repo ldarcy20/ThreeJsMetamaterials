@@ -31,6 +31,7 @@ var elasticity = 0
 var allElasticities = []
 var elasticityObjects = []
 var file;
+var isMouseDown = false;
 
 var gridSizeX = 20;
 var gridSizeY = 20;
@@ -118,7 +119,7 @@ function init() {
 
     document.addEventListener('mousemove', updateCamera, false);
     document.addEventListener('mousemove', onDocumentMouseMove, false);
-    document.getElementById('color selector').addEventListener('mousedown', colorSelector, false);
+    document.getElementById('color selector').addEventListener('mousemove', colorSelector, false);
     document.getElementById('circleScale1').onclick = () => {changeCircleScale(1)};
     document.getElementById('circleScale2').onclick = () => {changeCircleScale(2)};
     document.getElementById('circleScale4').onclick = () => {changeCircleScale(4)};
@@ -194,7 +195,11 @@ function addEventListeners() {
             rightClickPressed = true;
         }
     });
+    document.addEventListener('mousedown', (e) => {
+        isMouseDown = true;
+    });
     document.addEventListener('mouseup', (e) => {
+        isMouseDown = false;
         if(e.which == 1) {
         onMouseDownTheta = theta;
         onMouseDownPhi = phi;
@@ -316,6 +321,7 @@ function numOfIslands() {
     return islands;
 }
 function colorSelector(e) {
+    if(!isMouseDown) return;
     var style = window.getComputedStyle(document.getElementById("color selector"))
     var midX = parseInt(style.getPropertyValue('left'), 10) + 100;
     var midY = parseInt(style.getPropertyValue('top'), 10) + 100;
@@ -330,9 +336,14 @@ function colorSelector(e) {
         } else {
             angle = toDegrees(Math.atan2(y, x)) + 360;
         }
-        angle = angle + 90;
-        if (angle > 360) angle = angle - 360;
-        console.log(angle);
+        document.getElementById("colorWheelLine").x1.baseVal.value = (50 * Math.cos(toRadians(angle))) + midX;
+        document.getElementById("colorWheelLine").y1.baseVal.value = (50 * Math.sin(toRadians(angle))) + midY;
+        document.getElementById("colorWheelLine").x2.baseVal.value = (80 * Math.cos(toRadians(angle))) + midX;
+        document.getElementById("colorWheelLine").y2.baseVal.value = (80 * Math.sin(toRadians(angle))) + midY; 
+        var displayAngle = (angle / 3.6) + 25;
+        if(displayAngle > 100) displayAngle = displayAngle - 100; 
+        document.getElementById("elasticityText").value = (Math.round(displayAngle)).toString();
+        elasticity = (Math.round(displayAngle));
     } else if (distance >= 80) {
         
     } else {

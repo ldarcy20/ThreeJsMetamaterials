@@ -79,8 +79,13 @@ body {
   }
   .elasticityField {
     position: absolute;
-    left:1272px;
-    top:110px;
+    background-color:rgba(0, 0, 0, 0);
+    border: none;
+    outline: none;
+    font-size:30px;
+    font-family:'Times New Roman';
+    left:1275px;
+    top:105px;
     width: 50px;
   }
   .square {
@@ -101,7 +106,8 @@ body {
   }
   
   .wheelLine{
-    stroke:#FF0000;
+    position: absolute;
+    stroke:#000000;
     display: inline-block;
-    stroke-width:2;
+    stroke-width:3;
   }
