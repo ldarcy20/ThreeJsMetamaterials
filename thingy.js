@@ -1,4 +1,3 @@
-https://mrdoob.com/projects/voxels/#A/alnSdYeafiacdaehahc
 var scene, renderer, camera;
 var cameraCenter = new THREE.Vector3();
 var cameraHorzLimit = 10;
@@ -8,8 +7,6 @@ var mouseDown = new THREE.Vector2();
 var state = 0;
 var leftClickPressed = false;
 var rightClickPressed = false;
-//state : 0 "l" (Light Pos)
-//state : 1 "c" (Camera Pos)
 
 var cameraPos = new THREE.Vector3(0, 0, 7);
 
@@ -30,6 +27,7 @@ var vector, dir, distance, pos;
 var elasticity = 0
 var allElasticities = []
 var elasticityObjects = []
+var elasticityObjectsForPhysics = []
 var file;
 var isMouseDown = false;
 
@@ -42,9 +40,18 @@ var sketchMode = false;
 
 var boxGeoList = []
 
+var islandObjects = [];
+var physicsBlocks = [];
+
+var exportBoxHeight = .2;
+
+var mesh;
+var planeMat;
+
+
 init();
 animate();
-
+Ammo().then(start)
 
 function init() {
     for(var i = 10; i < 40; i += 10) {
@@ -91,7 +98,7 @@ function init() {
     // Create a MeshFaceMaterial, which allows the cube to have different materials on each face 
     var cubeMaterial = new THREE.MeshFaceMaterial(cubeMaterials); 
     //https://threejs.org/docs/#api/en/constants/Materials
-    var mesh = new THREE.Mesh(cube, cubeMaterial);
+    mesh = new THREE.Mesh(cube, cubeMaterial);
     mesh.position.set(0,0,0);
     //scene.add(mesh);
     light = new THREE.PointLight(0xFFFFFF, 1, 500);
@@ -197,6 +204,8 @@ function addEventListeners() {
     });
     document.addEventListener('mousedown', (e) => {
         isMouseDown = true;
+        checkBallPos();
+        
     });
     document.addEventListener('mouseup', (e) => {
         isMouseDown = false;
@@ -294,14 +303,18 @@ function disableRightClickMenu(event) {
     event.preventDefault();
     return false;
 }
-function numOfIslandsDFS(row, col, visited, boxElasticity) {
+function numOfIslandsDFS(row, col, visited, boxElasticity, islands) {
     if (row < 0 || col < 0 || row >= gridSizeX || col >= gridSizeY || boxGeoList[row + col * gridSizeY].material.opacity != 1 || visited[row + col * gridSizeY] == 1 || boxGeoList[row + col * gridSizeY].material.name != boxElasticity)
             return visited;
     visited[row + col * gridSizeY] = 1; //marking it visited
-    visited = numOfIslandsDFS(row+ 1, col, visited, boxElasticity); // go right
-    visited = numOfIslandsDFS(row- 1, col, visited, boxElasticity); //go left
-    visited = numOfIslandsDFS(row, col + 1, visited, boxElasticity); //go down
-    visited = numOfIslandsDFS(row, col - 1, visited, boxElasticity); // go up
+
+    if(islandObjects[islands] == undefined) islandObjects[islands] = [];
+    (islandObjects[islands]).push(boxGeoList[row + col * gridSizeY]); 
+
+    visited = numOfIslandsDFS(row + 1, col, visited, boxElasticity, islands); // go right
+    visited = numOfIslandsDFS(row - 1, col, visited, boxElasticity, islands); //go left
+    visited = numOfIslandsDFS(row, col + 1, visited, boxElasticity, islands); //go down
+    visited = numOfIslandsDFS(row, col - 1, visited, boxElasticity, islands); // go up
     return visited;
 }
 
@@ -309,15 +322,15 @@ function numOfIslandsDFS(row, col, visited, boxElasticity) {
 function numOfIslands() {
     var visited = []
     var islands = 0;
+    islandObjects = []
     for(var x = 0; x < gridSizeX; x++) {
         for(var y = 0; y < gridSizeY; y++) {
             if(boxGeoList[x + y * gridSizeY].material.opacity == 1 && visited[x + y * gridSizeY] != 1) {
-                visited = numOfIslandsDFS(x, y, visited, boxGeoList[x + y * gridSizeY].material.name);
+                visited = numOfIslandsDFS(x, y, visited, boxGeoList[x + y * gridSizeY].material.name, islands);
                 islands++;
             }
         }
     }
-    console.log("Number of Islands: " + islands);
     return islands;
 }
 function colorSelector(e) {
@@ -349,4 +362,92 @@ function colorSelector(e) {
     } else {
 
     }
+}
+function exportObjects() {
+    var numIslands = numOfIslands();
+    var tempScene = new THREE.Scene();
+    var scalePos = {x: 0, z: 0}
+    var scaleDims = {x: 0, z: 0}
+    var scaleAmount = (.039 / 2); //For 1 mm: .039 (That is per object)
+
+    for(var island = 0; island < numIslands; island++) {
+        for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
+            scalePos.x = islandObjects[island][currPlane].position.x;
+            scalePos.z = islandObjects[island][currPlane].position.z;
+            scaleDims.x = islandObjects[island][currPlane].geometry.parameters.width;
+            scaleDims.z = islandObjects[island][currPlane].geometry.parameters.height;
+            var hasNeighbors = boxHasNeighbors(islandObjects[island][currPlane], island);
+            if(!hasNeighbors.left) {
+                scalePos.x += scaleAmount
+                scaleDims.x -= scaleAmount
+            }
+            if(!hasNeighbors.right) {
+                scalePos.x -= scaleAmount
+                scaleDims.x -= scaleAmount
+            }
+            if(!hasNeighbors.top) {
+                scalePos.z -= scaleAmount;
+                scaleDims.z -= scaleAmount
+            }
+            if(!hasNeighbors.bottom) {
+                scalePos.z += scaleAmount;
+                scaleDims.z -= scaleAmount;
+            }
+            var exportBoxGeo = new THREE.BoxGeometry(scaleDims.x, exportBoxHeight, scaleDims.z);
+            var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
+            var exportBoxMesh = new THREE.Mesh(exportBoxGeo, exportBoxMaterial);
+
+            exportBoxMesh.position.set(scalePos.x, islandObjects[island][currPlane].position.y, scalePos.z);
+            tempScene.add(exportBoxMesh);
+        }
+    }
+    tempScene.scale.set(25.4, 25.4, 25.4)
+    // scene.add(tempScene);
+
+    //For some reason with STLExporter, you need to give it a renderer for it to export the scene properly
+    var renderer2 = new THREE.WebGLRenderer({antialias: true});
+    renderer2.setClearColor("#f5f5f5");
+    renderer2.setSize(window.innerWidth,window.innerHeight);
+    renderer2.render(tempScene, camera);
+
+    var exporter = new THREE.STLExporter();
+    var str = exporter.parse(tempScene); // Export the scene
+    var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
+    saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+}
+
+function boxHasNeighbors(currObject, islandNum) {
+    var islandIndex = 0;
+    var leftVal = true;
+    var rightVal = true;
+    var topVal = true;
+    var bottomVal = true;
+
+    for(var i = 0; i < boxGeoList.length; i++) {
+        if(boxGeoList[i] == currObject) islandIndex = i;
+    }
+
+    if(islandIndex % gridSizeX > 0) { //is to the left
+        if(!islandObjects[islandNum].includes(boxGeoList[(islandIndex) - 1])) {
+            leftVal = false;
+        }
+    }
+
+    if(islandIndex % gridSizeX < (gridSizeX - 1)) { //is to right
+        if(!islandObjects[islandNum].includes(boxGeoList[islandIndex + 1])) {
+            rightVal = false;
+        }
+    }
+
+    if(islandIndex > (gridSizeY - 1)) { //is under
+        if(!islandObjects[islandNum].includes(boxGeoList[islandIndex - gridSizeY])) {
+            bottomVal = false;
+        }
+    }
+    if(islandIndex < (gridSizeY - 1) * gridSizeX) { //is on top
+        if(!islandObjects[islandNum].includes(boxGeoList[islandIndex + gridSizeY])) {
+            topVal = false;
+        }
+    }
+    return {left: leftVal, right: rightVal, top: topVal, bottom: bottomVal};
 }

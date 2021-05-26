@@ -96,6 +96,8 @@ function renderFrame(){
     updatePhysics( deltaTime );
 
     renderer.render( scene, camera );
+    console.log("Here");
+
 
     requestAnimationFrame( renderFrame );
 

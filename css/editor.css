@@ -47,9 +47,9 @@ body {
   /* Change the background color of the dropdown button when the dropdown content is shown */
   .dropdown:hover .dropbtn {background-color: #3e8e41;}
 
-  .RemoveCursor { 
+  /* .RemoveCursor { 
     cursor: none; 
-  }
+  } */
   .buttons{
     position: absolute;
   }
@@ -75,6 +75,10 @@ body {
   }
   .elasticity{
     left:475px;
+    top:20px;
+  }
+  .export {
+    left:405px;
     top:20px;
   }
   .elasticityField {

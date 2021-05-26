@@ -17,13 +17,13 @@
         </div>
       </div>
     <button class="buttons sketch" id="sketchButton" onClick="toggleSketchMode()">Sketch</button> 
-    <button class="buttons resizeBoxes" id="selectResizeBoxesMode" onClick="toggleResiszeBoxesMode()">Adjust Boxes Mode</button>
+    <button class="buttons resizeBoxes" id="selectResizeBoxesMode" onClick="togglePhysicsSimulator()">Simulator</button>
     <button class="buttons save" id="saveButton" onClick="saveScene()">Save</button> 
     <button class="buttons load" id="loadButton" onClick="promptFileExplorer()">Load</button>
+    <button class="buttons export" id="exportButton" onClick="exportObjects()">Export</button>
     <div class="square"></div>
     <img class = "HSVimg" src="photos/HSVCircle.png" id="color selector">
-    <input class = "elasticityField" name="elasticityTxt" type="text" maxlength="10" id="elasticityText"/>
-    <button class="buttons elasticity" id="elasticityButton" onClick="updateElasticity()">Submit</button>
+    <input class = "elasticityField" name="elasticityTxt" type="text" maxlength="10" id="elasticityText" onKeyUp="updateElasticity()"/>
     <svg height="2000" width="2000" style="position:absolute; pointer-events: none">
       <line id="colorWheelLine" class = "wheelLine" x1="0" y1="0" x2="0" y2="0"/>
     </svg>
@@ -31,8 +31,10 @@
     <script src="js/sketchMode.js"></script>
     <script src="js/OrbitControls.js"></script>
     <script src="js/ammo.js"></script>
+    <script src="js/FileSaver.js"></script>
+    <script src="js/STLExporter.js"></script>
     <!-- <iframe id="viewer" name="viewer" src="thingy.js" allowfullscreen allowvr onmousewheel=""></iframe> -->
-
+    <script src="physicsSim.js"></script>
     <script src="sketchMode.js"></script>
     <script src="thingy.js"></script>
     <script src="home.js"></script>
