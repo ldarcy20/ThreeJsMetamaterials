@@ -10,9 +10,6 @@ function start() {
 
     setupPhysicsWorld();
 
-    //createBlock({x: 0, y: -.5, z: 0});
-    //createBall();
-    //renderFrame();
 }
 
 function setupPhysicsWorld(){
@@ -117,7 +114,6 @@ function createBall(pos){
 function renderFrame(){
 
     let deltaTime = clock.getDelta();
-
     updatePhysics( deltaTime );
     requestAnimationFrame( renderFrame );
 
@@ -151,29 +147,7 @@ function updatePhysics( deltaTime ){
     detectCollision2(rigidBodies);
 
 }
-function detectCollision(balls, prevVelocityY){
-    for(let k = 0; k < balls.length; k++) {
-        var ball = balls[k].userData.physicsBody;
 
-        let dispatcher = physicsWorld.getDispatcher();
-        let numManifolds = dispatcher.getNumManifolds();
-        for ( let i = 0; i < numManifolds; i ++ ) {
-
-            let contactManifold = dispatcher.getManifoldByIndexInternal( i );
-            let numContacts = contactManifold.getNumContacts();
-
-            for ( let j = 0; j < numContacts; j++ ) {
-
-                let contactPoint = contactManifold.getContactPoint( j );
-                let distance = contactPoint.getDistance();
-
-                setBallVelocity(ball, 0, -prevVelocityY[k], 0);
-
-
-            }
-        }
-    }
-}
 function detectCollision2(balls) {
     for(var i = 0; i < balls.length; i++) {
         physicsWorld.contactTest( balls[i].userData.physicsBody , cbContactResult );
@@ -202,13 +176,10 @@ function setupContactResultCallback() {
 
 		let tag, localPos, worldPos
 
-		//if( threeObject0.userData.tag != "ball" ){
 
-		// tag = threeObject0.userData.tag;
 		localPos = contactPoint.get_m_localPointA();
 		worldPos = contactPoint.get_m_positionWorldOnA();
 
-		// tag = threeObject1.userData.tag;
 		localPos = contactPoint.get_m_localPointB();
 		worldPos = contactPoint.get_m_positionWorldOnB();
 
@@ -235,5 +206,11 @@ function removeFromPhysicsBlocks(objectIntersect) {
         physicsWorld.removeRigidBody(physicsBlocks[removeIndex]);
         elasticityObjectsForPhysics.splice(removeIndex, 1);
         physicsBlocks.splice(removeIndex, 1);
+    }
+}
+function clearAllBalls() {
+    while(rigidBodies.length > 0) {
+        scene.remove(rigidBodies[rigidBodies.length -1]);
+        rigidBodies.pop();
     }
 }

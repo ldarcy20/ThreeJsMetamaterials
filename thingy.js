@@ -48,6 +48,8 @@ var exportBoxHeight = .2;
 var mesh;
 var planeMat;
 
+var mouseDownX, mouseDownY;
+
 
 init();
 animate();
@@ -57,9 +59,6 @@ function init() {
     for(var i = 10; i < 40; i += 10) {
         elasticityObjects[i] = []
     }
-
-    
-
 
     scene = new THREE.Scene();
 
@@ -82,10 +81,6 @@ function init() {
         raycasterInRadius[i] = new THREE.Raycaster();
     }
 
-
-
-
-
     var cube = new THREE.BoxGeometry(1, 1, 1);
     var cubeMaterials = [ 
         new THREE.MeshBasicMaterial({color:0xff0000, side: THREE.DoubleSide}),
@@ -106,12 +101,12 @@ function init() {
     scene.add(light);
     //https://threejs.org/docs/#api/en/lights/PointLight
 
-    var circleGeom = new THREE.CircleGeometry( .1, 64 );
+    /*var circleGeom = new THREE.CircleGeometry( .1, 64 );
     var circleMaterial = new THREE.LineBasicMaterial( { color: 0x00ffff } );
     cursorCircle = new THREE.Mesh(circleGeom, circleMaterial );
     cursorCircle.rotation.setFromVector3(new THREE.Vector3( Math.PI / 2), 0, 0);
     cursorCircle.material.side = THREE.DoubleSide;
-    cursorCircle.name = "Cursor Circle";
+    cursorCircle.name = "Cursor Circle"; */
 
     var sketchPlaneGeo = new THREE.PlaneGeometry(10, 10, 32, 32 );
     var sketchPlaneMat = new THREE.MeshBasicMaterial( {color: Math.random() * 0xFFFFFF, side: THREE.DoubleSide, opacity: 0, transparent:true} );
@@ -127,9 +122,11 @@ function init() {
     document.addEventListener('mousemove', updateCamera, false);
     document.addEventListener('mousemove', onDocumentMouseMove, false);
     document.getElementById('color selector').addEventListener('mousemove', colorSelector, false);
-    document.getElementById('circleScale1').onclick = () => {changeCircleScale(1)};
-    document.getElementById('circleScale2').onclick = () => {changeCircleScale(2)};
-    document.getElementById('circleScale4').onclick = () => {changeCircleScale(4)};
+
+    // IMPORTANT: For radius buttons
+    // document.getElementById('circleScale1').onclick = () => {changeCircleScale(1)};
+    // document.getElementById('circleScale2').onclick = () => {changeCircleScale(2)};
+    // document.getElementById('circleScale4').onclick = () => {changeCircleScale(4)};
     
 
     createGrid(gridSizeX, gridSizeY, .25)
@@ -182,7 +179,7 @@ function onDocumentMouseMove(event) {
     vector.unproject( camera );
 
     dir = vector.sub( camera.position ).normalize();
-    distance = - camera.position.z / dir.z;
+    distance = -camera.position.z / dir.z;
     pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
 
     updateSketchTrail();
@@ -217,6 +214,10 @@ function addEventListeners() {
             rightClickPressed = false;
         }
     });
+    document.getElementById("color selector").addEventListener('mousedown', (e) => {
+        mouseDownX = e.clientX;
+        mouseDownY = e.clientY;
+    });
 
     window.addEventListener('resize', () => {
         renderer.setSize(window.innerWidth,window.innerHeight);
@@ -224,16 +225,14 @@ function addEventListeners() {
 
         camera.updateProjectionMatrix();
 
-    })
+    });
 }
 
 function saveScene() {
     var result = scene.toJSON();
-    var output =JSON.stringify(result);
+    var output = JSON.stringify(result);
     var fileName = makeid(10);
     downloadJSON(result, fileName);
-
-
 }
 function promptFileExplorer() {
     var input = document.createElement('input');
@@ -358,7 +357,26 @@ function colorSelector(e) {
         document.getElementById("elasticityText").value = (Math.round(displayAngle)).toString();
         elasticity = (Math.round(displayAngle));
     } else if (distance >= 80) {
-        
+        var xChange = e.clientX - mouseDownX;
+        var yChange = e.clientY - mouseDownY;
+        mouseDownX = e.clientX;
+        mouseDownY = e.clientY;
+        var currLeftSquare = parseInt(getStyleSheetRule(document.styleSheets[0], ".square", "left"));
+        var currTopSquare = parseInt(getStyleSheetRule(document.styleSheets[0], ".square", "top"));
+        var currLeftImg = parseInt(getStyleSheetRule(document.styleSheets[0], ".hsvimg", "left"));
+        var currTopImg = parseInt(getStyleSheetRule(document.styleSheets[0], ".hsvimg", "top"));
+        var currLeftTxt = parseInt(getStyleSheetRule(document.styleSheets[0], ".elasticityField", "left"));
+        var currTopTxt = parseInt(getStyleSheetRule(document.styleSheets[0], ".elasticityField", "top"));
+        changeStylesheetRule(document.styleSheets[0], ".square", "left", (currLeftSquare += xChange).toString().concat("px"));
+        changeStylesheetRule(document.styleSheets[0], ".square", "top", (currTopSquare += yChange).toString().concat("px"));
+        changeStylesheetRule(document.styleSheets[0], ".hsvimg", "left", (currLeftImg += xChange).toString().concat("px"));
+        changeStylesheetRule(document.styleSheets[0], ".hsvimg", "top", (currTopImg += yChange).toString().concat("px"));
+        changeStylesheetRule(document.styleSheets[0], ".elasticityField", "left", (currLeftTxt += xChange).toString().concat("px"));
+        changeStylesheetRule(document.styleSheets[0], ".elasticityField", "top", (currTopTxt += yChange).toString().concat("px"));
+        document.getElementById("colorWheelLine").x1.baseVal.value += xChange;
+        document.getElementById("colorWheelLine").x2.baseVal.value += xChange;
+        document.getElementById("colorWheelLine").y1.baseVal.value += yChange;
+        document.getElementById("colorWheelLine").y2.baseVal.value += yChange;
     } else {
 
     }
@@ -368,7 +386,11 @@ function exportObjects() {
     var tempScene = new THREE.Scene();
     var scalePos = {x: 0, z: 0}
     var scaleDims = {x: 0, z: 0}
-    var scaleAmount = (.039 / 2); //For 1 mm: .039 (That is per object)
+    var scaleAmount = .05; //For 1 mm: (.039 / 2) (That is per object)
+    var changedLeft = false;
+    var changedRight = false;
+    var changedTop = false;
+    var changedBottom = false;
 
     for(var island = 0; island < numIslands; island++) {
         for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
@@ -377,32 +399,90 @@ function exportObjects() {
             scaleDims.x = islandObjects[island][currPlane].geometry.parameters.width;
             scaleDims.z = islandObjects[island][currPlane].geometry.parameters.height;
             var hasNeighbors = boxHasNeighbors(islandObjects[island][currPlane], island);
-            if(!hasNeighbors.left) {
+            if(!hasNeighbors.left && !changedLeft) {
                 scalePos.x += scaleAmount
                 scaleDims.x -= scaleAmount
+                changedLeft = true;
             }
-            if(!hasNeighbors.right) {
+            if(!hasNeighbors.right && !changedRight) {
                 scalePos.x -= scaleAmount
                 scaleDims.x -= scaleAmount
+                changedRight = true;
             }
-            if(!hasNeighbors.top) {
+            if(!hasNeighbors.top && !changedTop) {
                 scalePos.z -= scaleAmount;
-                scaleDims.z -= scaleAmount
+                scaleDims.z -= scaleAmount;
+                changedTop = true;
             }
-            if(!hasNeighbors.bottom) {
+            if(!hasNeighbors.bottom && !changedBottom) {
                 scalePos.z += scaleAmount;
                 scaleDims.z -= scaleAmount;
+                changedBottom = true;
             }
+            /* if(!hasNeighbors.topLeft) {
+                if(!changedLeft) {
+                    scalePos.x += scaleAmount
+                    scaleDims.x -= scaleAmount
+                    changedLeft = true;
+                }
+                if(!changedTop) {
+                    scalePos.z -= scaleAmount;
+                    scaleDims.z -= scaleAmount;
+                    changedTop = true;
+                }
+            }
+            if(!hasNeighbors.bottomLeft) {
+                if(!changedLeft) {
+                    scalePos.x += scaleAmount
+                    scaleDims.x -= scaleAmount
+                    changedLeft = true;
+                }
+                if(!changedBottom) {
+                    scalePos.z += scaleAmount;
+                    scaleDims.z -= scaleAmount;
+                    changedBottom = true;
+                }
+            }
+            if(!hasNeighbors.topRight) {
+                if(!changedRight) {
+                    scalePos.x -= scaleAmount
+                    scaleDims.x -= scaleAmount
+                    changedRight = true;
+                }
+                if(!changedTop) {
+                    scalePos.z -= scaleAmount;
+                    scaleDims.z -= scaleAmount;
+                    changedTop = true;
+                }
+            }
+            if(!hasNeighbors.bottomRight) {
+                if(!changedRight) {
+                    scalePos.x -= scaleAmount
+                    scaleDims.x -= scaleAmount
+                    changedRight = true;
+                }
+
+                if(!changedBottom) {
+                    scalePos.z += scaleAmount;
+                    scaleDims.z -= scaleAmount;
+                    changedBottom = true;
+                }
+            } */
             var exportBoxGeo = new THREE.BoxGeometry(scaleDims.x, exportBoxHeight, scaleDims.z);
             var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
             var exportBoxMesh = new THREE.Mesh(exportBoxGeo, exportBoxMaterial);
 
             exportBoxMesh.position.set(scalePos.x, islandObjects[island][currPlane].position.y, scalePos.z);
             tempScene.add(exportBoxMesh);
+
+            changedLeft = false;
+            changedRight = false;
+            changedTop = false;
+            changedBottom = false;
         }
     }
-    tempScene.scale.set(25.4, 25.4, 25.4)
-    // scene.add(tempScene);
+    // tempScene.scale.set(25.4, 25.4, 25.4)
+    scene.add(tempScene);
 
     //For some reason with STLExporter, you need to give it a renderer for it to export the scene properly
     var renderer2 = new THREE.WebGLRenderer({antialias: true});
@@ -413,7 +493,7 @@ function exportObjects() {
     var exporter = new THREE.STLExporter();
     var str = exporter.parse(tempScene); // Export the scene
     var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
-    saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+    // saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
 }
 
 function boxHasNeighbors(currObject, islandNum) {
@@ -422,6 +502,10 @@ function boxHasNeighbors(currObject, islandNum) {
     var rightVal = true;
     var topVal = true;
     var bottomVal = true;
+    var topLeftVal = true;
+    var topRightVal = true;
+    var bottomLeftVal = true;
+    var bottomRightVal = true;
 
     for(var i = 0; i < boxGeoList.length; i++) {
         if(boxGeoList[i] == currObject) islandIndex = i;
@@ -431,23 +515,43 @@ function boxHasNeighbors(currObject, islandNum) {
         if(!islandObjects[islandNum].includes(boxGeoList[(islandIndex) - 1])) {
             leftVal = false;
         }
+
     }
 
     if(islandIndex % gridSizeX < (gridSizeX - 1)) { //is to right
         if(!islandObjects[islandNum].includes(boxGeoList[islandIndex + 1])) {
             rightVal = false;
         }
+
     }
 
     if(islandIndex > (gridSizeY - 1)) { //is under
         if(!islandObjects[islandNum].includes(boxGeoList[islandIndex - gridSizeY])) {
             bottomVal = false;
         }
+
     }
     if(islandIndex < (gridSizeY - 1) * gridSizeX) { //is on top
         if(!islandObjects[islandNum].includes(boxGeoList[islandIndex + gridSizeY])) {
             topVal = false;
         }
     }
-    return {left: leftVal, right: rightVal, top: topVal, bottom: bottomVal};
+
+    //add edge cases later
+    if(leftVal && topVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) - gridSizeY])) {
+        topLeftVal = false;
+    }
+
+    if(rightVal && topVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex + 1) - gridSizeY])) {
+        topRightVal = false;
+    }
+
+    if(leftVal && bottomVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) + gridSizeY])) {
+        bottomLeftVal = false;
+    }
+
+    if(rightVal && bottomVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex + 1) + gridSizeY])) {
+        bottomRightVal = false;
+    }
+    return {left: leftVal, right: rightVal, top: topVal, bottom: bottomVal, topLeft: topLeftVal, bottomLeft: bottomLeftVal, topRight: topRightVal, bottomRight: bottomRightVal};
 }

@@ -96,7 +96,6 @@ function renderFrame(){
     updatePhysics( deltaTime );
 
     renderer.render( scene, camera );
-    console.log("Here");
 
 
     requestAnimationFrame( renderFrame );
@@ -246,9 +245,12 @@ function detectCollision(ball, prevVelocityY){
 
 }
 
-
 function setBallVelocity(body,x,y,z){
     var velocityVal = new Ammo.btVector3();
     velocityVal.setValue(x,.9 * y,z);
     body.setLinearVelocity(velocityVal);
+}
+
+function clearAllBalls() {
+    console.log(rigidBodies);
 }

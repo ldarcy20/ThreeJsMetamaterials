@@ -41,7 +41,7 @@ function updateSketchTrail() {
     if(sketchMode) {
         for ( let i = 0; i < intersects.length; i ++ ) {
 		    if( intersects[i].object.name == "Sketch Plane") {
-                cursorCircle.position.set(intersects[i].point.x, .05, intersects[i].point.z);
+                // cursorCircle.position.set(intersects[i].point.x, .05, intersects[i].point.z);
             }
 	    }
     }
@@ -50,10 +50,10 @@ function updateSketchTrail() {
 function toggleSketchMode() {
     sketchMode = !sketchMode;
     if(sketchMode){
-        scene.add(cursorCircle);
+        // scene.add(cursorCircle);
         document.getElementById('body').classList.add("RemoveCursor");
     } else {
-        scene.remove(cursorCircle);
+        // scene.remove(cursorCircle);
         document.getElementById('body').classList.remove("RemoveCursor");
         onMouseDownTheta = 0
         onMouseDownPhi = 180

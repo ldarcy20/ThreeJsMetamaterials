@@ -8,32 +8,42 @@
     <link rel="stylesheet" href="css/editor.css">
 </head>
 <body id = "body">
-    <div class="dropdown">
-        <button class="dropbtn">Radius</button>
-        <div class="dropdown-content">
-          <a href="#" id="circleScale1"> .1 </a>
-          <a href="#" id="circleScale2"> .2 </a>
-          <a href="#" id="circleScale4"> .4 </a>
-        </div>
-      </div>
+
     <button class="buttons sketch" id="sketchButton" onClick="toggleSketchMode()">Sketch</button> 
     <button class="buttons resizeBoxes" id="selectResizeBoxesMode" onClick="togglePhysicsSimulator()">Simulator</button>
     <button class="buttons save" id="saveButton" onClick="saveScene()">Save</button> 
-    <button class="buttons load" id="loadButton" onClick="promptFileExplorer()">Load</button>
+    <button class="buttons load" id="loadButton" onClick="promptFileExplorer()">Import</button>
     <button class="buttons export" id="exportButton" onClick="exportObjects()">Export</button>
-    <div class="square"></div>
-    <img class = "HSVimg" src="photos/HSVCircle.png" id="color selector">
+    <button class="buttons clear" id="clearButton" onClick="clearAllBalls()">Clear</button>
+    <div class="square" id="roundedSquare"></div>
+    <img class="hsvimg" src="photos/HSVCircle.png" id="color selector">
     <input class = "elasticityField" name="elasticityTxt" type="text" maxlength="10" id="elasticityText" onKeyUp="updateElasticity()"/>
     <svg height="2000" width="2000" style="position:absolute; pointer-events: none">
       <line id="colorWheelLine" class = "wheelLine" x1="0" y1="0" x2="0" y2="0"/>
     </svg>
+
+    <div id="controls">
+      <!-- First Panel -->
+      <div class="panel">
+        <div clas="panel-heading">
+          <h4 class="panel-title"><a data-target="#voxel-mode-collapse" data-toggle="collapse" href="#voxel-mode-collapse">Import / Export</a></h4>
+        </div>
+        <div class="panel-collapse collapse" id="misc-collapse">
+          <div class="panel-collapse collapse" id="misc-collapse">
+            <div class="voxel-btn voxel-text-btn" id="voxel-import-btn">
+              import .stl
+            </div>
+          </div>
+        </div>  
+      </div>
+    </div>
+
     <script src="js/three.js"></script>
     <script src="js/sketchMode.js"></script>
     <script src="js/OrbitControls.js"></script>
     <script src="js/ammo.js"></script>
     <script src="js/FileSaver.js"></script>
     <script src="js/STLExporter.js"></script>
-    <!-- <iframe id="viewer" name="viewer" src="thingy.js" allowfullscreen allowvr onmousewheel=""></iframe> -->
     <script src="physicsSim.js"></script>
     <script src="sketchMode.js"></script>
     <script src="thingy.js"></script>
@@ -42,6 +52,5 @@
     
 
 
-    </script>
 </body>
 </html>
