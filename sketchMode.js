@@ -1,9 +1,5 @@
-function initSketchMode() {
-    var boxGeo = new THREE.PlaneGeometry(30, 32, 32)
-}
-
 function createBox(point1, point2) {
-    var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0000ff } )
+    var lineMaterial = new THREE.LineBasicMaterial( { color: 0x000000 } )
     const points = []
     points.push(new THREE.Vector3(point1.x, 0, point1.y))
     points.push(new THREE.Vector3(point1.x, 0, point2.y))
@@ -12,6 +8,7 @@ function createBox(point1, point2) {
     points.push(new THREE.Vector3(point1.x, 0, point1.y))
     var lineGeom1 = new THREE.BufferGeometry().setFromPoints(points);
     var line1Mesh = new THREE.Line(lineGeom1, lineMaterial)
+    line1Mesh.name = "Grid Lines";
     
     var planeGeo = new THREE.PlaneGeometry( Math.max(point1.x, point2.x) - Math.min(point1.x, point2.x), Math.max(point1.y, point2.y) - Math.min(point1.y, point2.y), 32, 32 );
     planeMat = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide, opacity: 0, transparent: true} );
@@ -37,24 +34,10 @@ function createGrid(xBoxNum, yBoxNum, boxWidth) {
     }
 }
 
-function updateSketchTrail() {
-    if(sketchMode) {
-        for ( let i = 0; i < intersects.length; i ++ ) {
-		    if( intersects[i].object.name == "Sketch Plane") {
-                // cursorCircle.position.set(intersects[i].point.x, .05, intersects[i].point.z);
-            }
-	    }
-    }
-}
 
 function toggleSketchMode() {
     sketchMode = !sketchMode;
-    if(sketchMode){
-        // scene.add(cursorCircle);
-        document.getElementById('body').classList.add("RemoveCursor");
-    } else {
-        // scene.remove(cursorCircle);
-        document.getElementById('body').classList.remove("RemoveCursor");
+    if(!sketchMode) {
         onMouseDownTheta = 0
         onMouseDownPhi = 180
         camera.lookAt( new THREE.Vector3(0,0,0))
@@ -74,13 +57,11 @@ function findGridOverlap(objectsOverlapped) {
         if(leftClickPressed) {
             for(var i = 0; i < objectsOverlapped.length; i++) {
                 if(intersects[i].object.name == "Grid Box" && intersects[i].object.material.transparent) {
-                    elasticityObjects[elasticity] = intersects[i].object; //add elasticity object to datastructure
                     intersects[i].object.material.transparent = false;
                     intersects[i].object.material.opacity = 1;
                     intersects[i].object.material.name = elasticity;
                     intersects[i].object.material.color.setHex(hsvToRgb((elasticity/100), 1, 1));
                     createBlock({x: intersects[i].object.position.x, y: -.5, z: intersects[i].object.position.z});
-
                     elasticityObjectsForPhysics.push(intersects[i].object);
                 }
             }
@@ -88,23 +69,19 @@ function findGridOverlap(objectsOverlapped) {
         if(rightClickPressed) {
             for(var i = 0; i < objectsOverlapped.length; i++) {
                 if(intersects[i].object.name == "Grid Box") {
-                    elasticityObjects[elasticity] = [];
-                    elasticityObjects[elasticity].splice(elasticityObjects[elasticity].indexOf(intersects[i].object), 1);
-                    elasticityObjects[elasticity] = intersects[i].object;
                     intersects[i].object.material.transparent = true;
                     intersects[i].object.material.opacity = 0;
                     removeFromPhysicsBlocks(intersects[i].object);
                 }
             }
         }
-    }
+    } 
 }
 function checkBallPos() {
     if(isSimulating) {
         objectsOverlapped = raycaster.intersectObjects(scene.children);
         for(var i = 0; i < objectsOverlapped.length; i++) {
             if(intersects[i].object.name == "Grid Box") {
-
                 createBall({x: intersects[i].object.position.x, y: 4, z: intersects[i].object.position.z});
                 ballElasiticitys.push(intersects[i].object.material.name / 100);
                 renderFrame();
@@ -118,7 +95,6 @@ function changeCircleScale(scaleRadius) {
     cursorCircle.scale.set(scaleRadius, scaleRadius);
 }
 function updateElasticity() {
-    var isInList = false;
     elasticity = document.getElementById("elasticityText").value;
 }
 
@@ -141,12 +117,4 @@ function hsvToRgb(h, s, v) {
         case 5: r = v, g = p, b = q; break;
     }
     return (Math.round(r * 255) * Math.pow(16, 4) + Math.round(g * 255) * Math.pow(16, 2) + Math.round(b * 255));
-}
-
-function fixString(hexString) {
-    while(hexString.length < 6) {
-        hexString = ("0").concat(hexString)
-    }
-
-    return hexString;
 }

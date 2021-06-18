@@ -1,27 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="css/testStylesheet.css">
-</head>
-<body id = "body">
-    <button class="accordion">Section 1</button>
-        <div class="panel">
-        <p>Lorem ipsum...</p>
+<html>
+    <head>
+        <title>Test</title>
+        <meta name='Author' content='Matt Seng' />
+        <meta name="Description" content="IGP" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="css/testStylesheet.css" media="screen" />
+    </head>
+    
+    <body>
+
+        <div id="menuDiv">
+            <div id="menuCtrl">
+                <div id="menuCtrlWrapper" class="menuWrapper">
+                    <div id="menuCtrlTabs" class="menuTabs">
+                        <div id="menuCtrlTabShow" class="clickable tab showHide inActive hidden" onclick="tab(this.id);">
+                            Show
+                        </div>
+                        <div id="menuCtrlTabHide" class="clickable tab showHide inActive" onclick="tab(this.id);">
+                                Hide
+                        </div>
+                    <div id="menuCtrlTabs" class="menuTabs">
+                        <div id="menuCtrlTab1" class="clickable tab active" onclick="tab(this.id);">
+                            Import/Export
+                        </div>
+                    </div>
+
+                    <div id='menuCtrlFormDiv1'>
+                        <div id="menuCtrlForm1" class="menuForm importExport">
+                            <button class="menuButton importStl">import .STL</button>
+                            <button class="menuButton exportStl">export .STL</button>
+                            <button class="menuButton import">import</button>
+                            <button class="menuButton export">export</button>
+                        </div>
+                    </div>
+
+                    <div id="menuCtrlTabs" class="menuTabs">
+                        <div id="menuCtrlTab2" class="clickable tab inActive" onclick="tab(this.id);">
+                            Simulator
+                    </div>
+
+                    <div id='menuCtrlFormDiv2'>
+                        <div id="menuCtrlForm2" class="menuForm simulate hidden">
+                            <button class="menuButton importStl">Simulate Mode</button>
+                            <button class="menuButton exportStl">Clear Balls</button>
+                        </div>
+                    </div>
+
+                    <div id="menuCtrlTabs" class="menuTabs">
+                        <div id="menuCtrlTab3" class="clickable tab inActive" onclick="tab(this.id);">
+                            Sketch Mode
+                        </div>
+                    </div>
+
+                    <div id='menuCtrlFormDiv3'>
+                        <div id="menuCtrlForm3" class="menuForm hidden">
+                            <button class="menuButton importStl">Sketch</button>
+                        </div>
+                    </div>
+
+                    <div id="menuCtrlTabs" class="menuTabs">
+                        <div id="menuCtrlTab4" class="clickable tab inActive" onclick="tab(this.id);">
+                            Grid Settings
+                        </div>
+                    </div>
+
+                    <div id="menuCtrlFormDiv4">
+                        <div id="menuCtrlForm4" class="menuForm hidden">
+                            <div>Testing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <button class="accordion">Section 2</button>
-        <div class="panel">
-        <p>Lorem ipsum...</p>
-        </div>
-
-        <button class="accordion">Section 3</button>
-        <div class="panel">
-        <p>Lorem ipsum...</p>
-    </div>
-
-    <script src="testThing.js"></script>
-</body>
+        <script type='text/javascript' src='testThing.js'></script>
+    </body>
+</html>

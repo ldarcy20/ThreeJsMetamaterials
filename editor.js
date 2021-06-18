@@ -1,72 +1,46 @@
 var scene, renderer, camera;
-var cameraCenter = new THREE.Vector3();
-var cameraHorzLimit = 10;
-var cameraVertLimit = 10;
 var mouse = new THREE.Vector2();
 var mouseDown = new THREE.Vector2();
-var state = 0;
 var leftClickPressed = false;
 var rightClickPressed = false;
-
 var cameraPos = new THREE.Vector3(0, 0, 7);
-
 var light;
-var lightPos = new THREE.Vector3(10, 0, 25);
-
-var projector;
 var theta = 0;
 var phi = 0;
 var onMouseDownTheta = 0
 var onMouseDownPhi = 0;
 var radious = 7;
-var cursorCircle;
 var cursorCircleRadius = .1;
 var raycaster = new THREE.Raycaster();
 var raycasterInRadius = []
 var vector, dir, distance, pos;
 var elasticity = 0
-var allElasticities = []
-var elasticityObjects = []
 var elasticityObjectsForPhysics = []
-var file;
 var isMouseDown = false;
-
 var gridSizeX = 20;
 var gridSizeY = 20;
-
+var gridBoxSize = .25
 var sketchPlane, intersects;
-
 var sketchMode = false;
-
 var boxGeoList = []
-
 var islandObjects = [];
 var physicsBlocks = [];
-
 var exportBoxHeight = .2;
-
 var mesh;
 var planeMat;
-
 var mouseDownX, mouseDownY;
-
 
 init();
 animate();
 Ammo().then(start)
 
+/* Create threeJS scene and initialize event listeners */
 function init() {
-    for(var i = 10; i < 40; i += 10) {
-        elasticityObjects[i] = []
-    }
-
     scene = new THREE.Scene();
-
     renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setClearColor("#f5f5f5");
+    renderer.setClearColor("#ffffff");
     renderer.setSize(window.innerWidth,window.innerHeight);
     document.body.appendChild(renderer.domElement);
-
     camera = new THREE.PerspectiveCamera(
         75, //Field of view
         window.innerWidth/window.innerHeight, //aspect ratio
@@ -80,33 +54,9 @@ function init() {
     for(var i = 0; i < 8; i++) {
         raycasterInRadius[i] = new THREE.Raycaster();
     }
-
-    var cube = new THREE.BoxGeometry(1, 1, 1);
-    var cubeMaterials = [ 
-        new THREE.MeshBasicMaterial({color:0xff0000, side: THREE.DoubleSide}),
-        new THREE.MeshBasicMaterial({color:0x00ff00, side: THREE.DoubleSide}), 
-        new THREE.MeshBasicMaterial({color:0x0000ff, side: THREE.DoubleSide}),
-        new THREE.MeshBasicMaterial({color:0xffff00, side: THREE.DoubleSide}), 
-        new THREE.MeshBasicMaterial({color:0xff00ff, side: THREE.DoubleSide}), 
-        new THREE.MeshBasicMaterial({color:0x00ffff, side: THREE.DoubleSide}), 
-    ]; 
-    // Create a MeshFaceMaterial, which allows the cube to have different materials on each face 
-    var cubeMaterial = new THREE.MeshFaceMaterial(cubeMaterials); 
-    //https://threejs.org/docs/#api/en/constants/Materials
-    mesh = new THREE.Mesh(cube, cubeMaterial);
-    mesh.position.set(0,0,0);
-    //scene.add(mesh);
     light = new THREE.PointLight(0xFFFFFF, 1, 500);
-    light.position.set(lightPos.x,lightPos.y,lightPos.z);
+    light.position.set(10, 0, 25);
     scene.add(light);
-    //https://threejs.org/docs/#api/en/lights/PointLight
-
-    /*var circleGeom = new THREE.CircleGeometry( .1, 64 );
-    var circleMaterial = new THREE.LineBasicMaterial( { color: 0x00ffff } );
-    cursorCircle = new THREE.Mesh(circleGeom, circleMaterial );
-    cursorCircle.rotation.setFromVector3(new THREE.Vector3( Math.PI / 2), 0, 0);
-    cursorCircle.material.side = THREE.DoubleSide;
-    cursorCircle.name = "Cursor Circle"; */
 
     var sketchPlaneGeo = new THREE.PlaneGeometry(10, 10, 32, 32 );
     var sketchPlaneMat = new THREE.MeshBasicMaterial( {color: Math.random() * 0xFFFFFF, side: THREE.DoubleSide, opacity: 0, transparent:true} );
@@ -116,30 +66,17 @@ function init() {
     scene.add(sketchPlane);
     renderer.render(scene, camera);
 
-    initSketchMode();
     addEventListeners();
-
-    document.addEventListener('mousemove', updateCamera, false);
-    document.addEventListener('mousemove', onDocumentMouseMove, false);
-    document.getElementById('color selector').addEventListener('mousemove', colorSelector, false);
-
-    // IMPORTANT: For radius buttons
-    // document.getElementById('circleScale1').onclick = () => {changeCircleScale(1)};
-    // document.getElementById('circleScale2').onclick = () => {changeCircleScale(2)};
-    // document.getElementById('circleScale4').onclick = () => {changeCircleScale(4)};
-    
-
-    createGrid(gridSizeX, gridSizeY, .25)
-
-    
-}
-function animate()
-{   
-    //updateCamera();
-    requestAnimationFrame ( animate );  
-    renderer.render (scene, camera);
+    createGrid(gridSizeX, gridSizeY, gridBoxSize);
 }
 
+/* Begin Ammo animation */
+function animate() {   
+    requestAnimationFrame(animate);  
+    renderer.render(scene, camera);
+}
+
+/* Event listener for camera movement */
 function updateCamera(event) {
     //offset the camera x/y based on the mouse's position in the window
     event.preventDefault();
@@ -162,11 +99,12 @@ function updateCamera(event) {
 
     }
 }
+
+/* Event listener for when the mouse is moved in the threejs canvas */
 function onDocumentMouseMove(event) {
     event.preventDefault();
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
 
     raycaster.setFromCamera( mouse, camera );
     raycasterInRadius[0].setFromCamera(new THREE.Vector2(mouse.x + cursorCircleRadius/8, mouse.y), camera);	
@@ -182,10 +120,10 @@ function onDocumentMouseMove(event) {
     distance = -camera.position.z / dir.z;
     pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
 
-    updateSketchTrail();
     findGridOverlap(intersects);
-
 }
+
+/* Create all event listeners */
 function addEventListeners() {
     var cc = document.getElementsByTagName("canvas");
     cc[0].addEventListener('mousedown', (e) => {
@@ -197,6 +135,10 @@ function addEventListeners() {
             mouseDown.y = e.clientY;
         } else if(e.which == 3) {
             rightClickPressed = true;
+        }
+
+        if(!sketchMode && !isSimulating) {
+            selectIsland(e);
         }
     });
     document.addEventListener('mousedown', (e) => {
@@ -226,27 +168,33 @@ function addEventListeners() {
         camera.updateProjectionMatrix();
 
     });
+
+    document.addEventListener('mousemove', updateCamera, false);
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+    document.getElementById('color selector').addEventListener('mousemove', colorSelector, false);
 }
 
+/* Export threeJS scene to JSON file */
 function saveScene() {
     var result = scene.toJSON();
     var output = JSON.stringify(result);
     var fileName = makeid(10);
     downloadJSON(result, fileName);
 }
+
+/* Prompt the file explorer (probably didnt need this comment idk */
 function promptFileExplorer() {
     var input = document.createElement('input');
     input.type = 'file';
 
     input.onchange = e => { 
         var file = e.target.files[0];
-        console.log(file);
         loadFile(file);
     }
-
     input.click();
 }
 
+/* Load JSON files into the application */
 function loadFile(file) {
     var thingy;
     const reader = new FileReader();
@@ -257,18 +205,17 @@ function loadFile(file) {
     reader.readAsText(file);
 }
 
+/* Turn a JSON file into a threeJS scene */
 function loadScene(file) {
     var request = new XMLHttpRequest();
     request.open("GET", "saved_files/testFileJson.json", false);
     request.send(null)
-    console.log(file);
     var my_JSON_object = JSON.parse(file);
-    console.log(my_JSON_object);
     scene = new THREE.ObjectLoader().parse(my_JSON_object);
 
 }
 
-
+/* Download a json file with filename */
 function downloadJSON( json, filename ) {
 	saveString( JSON.stringify( json ), filename );  
 }
@@ -285,9 +232,9 @@ function save( blob, filename ) {
 
 function saveString( text, filename ) {
 	save( new Blob( [ text ], { type: 'application/json' } ), filename );
-
 }
 
+/* Creates a string of random letters of length specified by param */
 function makeid(length) {
     var result           = [];
     var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -298,10 +245,7 @@ function makeid(length) {
    return result.join('');
 }
 
-function disableRightClickMenu(event) {
-    event.preventDefault();
-    return false;
-}
+/* Depth first search recursive solution for finding all boxes in a signle island */
 function numOfIslandsDFS(row, col, visited, boxElasticity, islands) {
     if (row < 0 || col < 0 || row >= gridSizeX || col >= gridSizeY || boxGeoList[row + col * gridSizeY].material.opacity != 1 || visited[row + col * gridSizeY] == 1 || boxGeoList[row + col * gridSizeY].material.name != boxElasticity)
             return visited;
@@ -317,7 +261,7 @@ function numOfIslandsDFS(row, col, visited, boxElasticity, islands) {
     return visited;
 }
 
-
+/* Finding all islands by calling DFS method */
 function numOfIslands() {
     var visited = []
     var islands = 0;
@@ -332,6 +276,8 @@ function numOfIslands() {
     }
     return islands;
 }
+
+/* Color selector wheel */
 function colorSelector(e) {
     if(!isMouseDown) return;
     var style = window.getComputedStyle(document.getElementById("color selector"))
@@ -381,6 +327,8 @@ function colorSelector(e) {
 
     }
 }
+
+/* Creates STL file from threeJS scene */
 function exportObjects() {
     var numIslands = numOfIslands();
     var tempScene = new THREE.Scene();
@@ -481,8 +429,8 @@ function exportObjects() {
             changedBottom = false;
         }
     }
-    // tempScene.scale.set(25.4, 25.4, 25.4)
-    scene.add(tempScene);
+    tempScene.scale.set(25.4, 25.4, 25.4)
+    // scene.add(tempScene);
 
     //For some reason with STLExporter, you need to give it a renderer for it to export the scene properly
     var renderer2 = new THREE.WebGLRenderer({antialias: true});
@@ -493,9 +441,10 @@ function exportObjects() {
     var exporter = new THREE.STLExporter();
     var str = exporter.parse(tempScene); // Export the scene
     var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
-    // saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+    saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
 }
 
+/* Checks if a box has any neighbors and which ones it has */
 function boxHasNeighbors(currObject, islandNum) {
     var islandIndex = 0;
     var leftVal = true;
@@ -554,4 +503,79 @@ function boxHasNeighbors(currObject, islandNum) {
         bottomRightVal = false;
     }
     return {left: leftVal, right: rightVal, top: topVal, bottom: bottomVal, topLeft: topLeftVal, bottomLeft: bottomLeftVal, topRight: topRightVal, bottomRight: bottomRightVal};
+}
+
+function changeGridSize() {
+    gridSizeX = document.getElementById("gridInputX").value;
+    gridSizeY = document.getElementById("gridInputY").value;
+    gridBoxSize = document.getElementById("gridInputBoxSize").value;
+    for(var i = 0; i < scene.children.length; i++) {
+        if(scene.children[i].name == "Grid Box" || scene.children[i].name == "Grid Lines") {
+            scene.remove(scene.children[i]);
+            console.log("removed");
+        }
+    }
+
+    createGrid(gridSizeX, gridSizeY, gridBoxSize);
+}
+
+function selectIsland(event) {
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    //Update Intersects List and Islands
+    raycaster.setFromCamera( mouse, camera );
+	intersects = raycaster.intersectObjects(scene.children);
+    numOfIslands();
+
+    //Find the selected plane
+    var selectedPlane;
+    for(var i = 0; i < intersects.length; i++) {
+        if(intersects[i].object.name == "Grid Box") {
+            selectedPlane = intersects[i].object;
+        }
+    }
+    //Find the island the selected plane is part of
+    var selectedIslands = [];
+    for(var i = 0; i < islandObjects.length; i++) {
+        for(var j = 0; j < islandObjects[i].length; j++) {
+            if(selectedPlane == (islandObjects[i])[j]) {
+                selectedIslands = islandObjects[i];
+            }
+        }
+    }
+    if(islandObjects.length == 0 || selectedIslands.length == 0) return;
+
+    //Change the color of all objects in selected group
+    for(var i = 0; i < selectedIslands.length; i++) {
+        console.log(selectedIslands[i]);
+        selectedIslands[i].material.color.setHex(hsvToRgb(0, 0, 0));
+    }
+
+    tab("menuCtrlTab4");
+}
+
+function changeAllElasticities() {
+    for(var i = 0; i < elasticityObjectsForPhysics.length; i++) {
+        var objColor = elasticityObjectsForPhysics[i].material.color;
+        if(objColor.r == 0 && objColor.g == 0 && objColor.b == 0) {
+            elasticityObjectsForPhysics[i].material.name = document.getElementById("newElasticityInput").value;
+            elasticityObjectsForPhysics[i].material.color.setHex(hsvToRgb((document.getElementById("newElasticityInput").value/100), 1, 1));
+            console.log(elasticityObjectsForPhysics[i]);
+        }
+    }
+}
+
+function removeSelectedRegions() {
+    var tempArray = [...elasticityObjectsForPhysics]; //Copy array
+
+    for(var i = 0; i < elasticityObjectsForPhysics.length; i++) {
+        var objColor = elasticityObjectsForPhysics[i].material.color;
+        if(objColor.r == 0 && objColor.g == 0 && objColor.b == 0) {
+            elasticityObjectsForPhysics[i].material.transparent = true;
+            elasticityObjectsForPhysics[i].material.opacity = 0;
+            tempArray.splice(elasticityObjectsForPhysics.indexOf(elasticityObjectsForPhysics[i]), 1);
+        }
+    }
+    elasticityObjectsForPhysics = tempArray;
 }
