@@ -56,7 +56,7 @@ function findGridOverlap(objectsOverlapped) {
     if(sketchMode) {
         if(leftClickPressed) {
             for(var i = 0; i < objectsOverlapped.length; i++) {
-                if(intersects[i].object.name == "Grid Box" && intersects[i].object.material.transparent) {
+                if(intersects[i].object.name == "Grid Box") {
                     intersects[i].object.material.transparent = false;
                     intersects[i].object.material.opacity = 1;
                     intersects[i].object.material.name = elasticity;

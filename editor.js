@@ -437,12 +437,86 @@ function exportObjects() {
     renderer2.setClearColor("#f5f5f5");
     renderer2.setSize(window.innerWidth,window.innerHeight);
     renderer2.render(tempScene, camera);
+    console.log(tempScene)
 
     var exporter = new THREE.STLExporter();
     var str = exporter.parse(tempScene); // Export the scene
     var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
     saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+
+    
+    //Create Second STL File
+    var tempScene2 = new THREE.Scene()
+    var randomNumArray = []
+    var loader = new THREE.STLLoader();
+    loader.load( 'photos/active.stl', function (inputGeometry) {
+        for(var island = 0; island < numIslands; island++) {
+            for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
+                var randomNum = Math.random()
+                if(randomNum < .5) {
+                    var posX = islandObjects[island][currPlane].position.x;
+                    var posY = islandObjects[island][currPlane].position.y;
+                    var posZ = islandObjects[island][currPlane].position.z;
+                    console.log(posX + " " + posY + " " + posZ)
+                    var material = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
+                    var tempMesh = new THREE.Mesh( inputGeometry, material );
+                    // tempMesh.position.set( islandObjects[island][currPlane].position.x, islandObjects[island][currPlane].position.y, islandObjects[island][currPlane].position.z);
+                    tempMesh.position.set(posX + .125, posY, posZ - .125)
+                    tempMesh.rotation.set(Math.PI / 2, 0, 0);
+                    tempMesh.scale.set( 1/(25.4 * 4), 1/(25.4 * 4), 1/(25.4 * 4));
+                    tempScene2.add( tempMesh );
+                }
+                randomNumArray.push(randomNum)
+            }
+        }
+    });
+    var counter = 0
+    loader.load( 'photos/deactive.stl', function (inputGeometry) {
+        for(var island = 0; island < numIslands; island++) {
+            for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
+                if(randomNumArray[counter] >= .5) {
+                    var posX = islandObjects[island][currPlane].position.x;
+                    var posY = islandObjects[island][currPlane].position.y;
+                    var posZ = islandObjects[island][currPlane].position.z;
+                    console.log(posX + " " + posY + " " + posZ)
+                    var material = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
+                    var tempMesh = new THREE.Mesh( inputGeometry, material );
+                    // tempMesh.position.set( islandObjects[island][currPlane].position.x, islandObjects[island][currPlane].position.y, islandObjects[island][currPlane].position.z);
+                    tempMesh.position.set(posX + .125, posY, posZ - .125)
+                    tempMesh.rotation.set(Math.PI / 2, 0, 0);
+                    tempMesh.scale.set( 1/(25.4 * 4), 1/(25.4 * 4), 1/(25.4 * 4));
+                    tempScene2.add( tempMesh );
+                }
+                counter++
+            }
+        }
+        console.log(tempScene2)
+        // scene.add(tempScene2)
+
+        var renderer3 = new THREE.WebGLRenderer({antialias: true});
+        renderer3.setClearColor("#f5f5f5");
+        renderer3.setSize(window.innerWidth,window.innerHeight);
+        renderer3.render(tempScene2, camera);
+        
+            
+        tempScene2.scale.set(25.4, 25.4, 25.4)
+        var exporter2 = new THREE.STLExporter();
+        var str2 = exporter2.parse(tempScene2); // Export the scene
+        var blob2 = new Blob( [str2], { type : 'text/plain' } ); // Generate Blob from the string
+        saveAs( blob2, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+    });
+
+
 }
+
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+      if ((new Date().getTime() - start) > milliseconds){
+        break;
+      }
+    }
+  }
 
 /* Checks if a box has any neighbors and which ones it has */
 function boxHasNeighbors(currObject, islandNum) {
