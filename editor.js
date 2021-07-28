@@ -14,7 +14,7 @@ var cursorCircleRadius = .1;
 var raycaster = new THREE.Raycaster();
 var raycasterInRadius = []
 var vector, dir, distance, pos;
-var elasticity = 0
+var elasticity = 50
 var elasticityObjectsForPhysics = []
 var isMouseDown = false;
 var gridSizeX = 20;
@@ -78,6 +78,8 @@ function animate() {
 
 /* Event listener for camera movement */
 function updateCamera(event) {
+    if(event.target == document.getElementById("myRange")) return
+
     //offset the camera x/y based on the mouse's position in the window
     event.preventDefault();
     if (leftClickPressed && !sketchMode) {
@@ -102,6 +104,8 @@ function updateCamera(event) {
 
 /* Event listener for when the mouse is moved in the threejs canvas */
 function onDocumentMouseMove(event) {
+    if(event.target == document.getElementById("myRange")) return
+
     event.preventDefault();
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
@@ -168,10 +172,10 @@ function addEventListeners() {
         camera.updateProjectionMatrix();
 
     });
-
     document.addEventListener('mousemove', updateCamera, false);
     document.addEventListener('mousemove', onDocumentMouseMove, false);
-    document.getElementById('color selector').addEventListener('mousemove', colorSelector, false);
+    document.getElementById('color selector').addEventListener('mousemove', colorSelector, false); 
+    document.getElementById('myRange').addEventListener('change', rangeMassChanged, false);
 }
 
 /* Export threeJS scene to JSON file */
@@ -328,132 +332,34 @@ function colorSelector(e) {
     }
 }
 
+function rangeMassChanged(event) {
+    console.log(document.getElementById("rangeMassText").value)
+    document.getElementById("rangeMassText").value = document.getElementById("myRange").value
+
+}
+
 /* Creates STL file from threeJS scene */
 function exportObjects() {
     var numIslands = numOfIslands();
     var tempScene = new THREE.Scene();
     var scalePos = {x: 0, z: 0}
-    var scaleDims = {x: 0, z: 0}
+    var scaleDims = {x: 1, z: 1}
     var scaleAmount = .05; //For 1 mm: (.039 / 2) (That is per object)
     var changedLeft = false;
     var changedRight = false;
     var changedTop = false;
     var changedBottom = false;
-
-    for(var island = 0; island < numIslands; island++) {
-        for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
-            scalePos.x = islandObjects[island][currPlane].position.x;
-            scalePos.z = islandObjects[island][currPlane].position.z;
-            scaleDims.x = islandObjects[island][currPlane].geometry.parameters.width;
-            scaleDims.z = islandObjects[island][currPlane].geometry.parameters.height;
-            var hasNeighbors = boxHasNeighbors(islandObjects[island][currPlane], island);
-            if(!hasNeighbors.left && !changedLeft) {
-                scalePos.x += scaleAmount
-                scaleDims.x -= scaleAmount
-                changedLeft = true;
-            }
-            if(!hasNeighbors.right && !changedRight) {
-                scalePos.x -= scaleAmount
-                scaleDims.x -= scaleAmount
-                changedRight = true;
-            }
-            if(!hasNeighbors.top && !changedTop) {
-                scalePos.z -= scaleAmount;
-                scaleDims.z -= scaleAmount;
-                changedTop = true;
-            }
-            if(!hasNeighbors.bottom && !changedBottom) {
-                scalePos.z += scaleAmount;
-                scaleDims.z -= scaleAmount;
-                changedBottom = true;
-            }
-            /* if(!hasNeighbors.topLeft) {
-                if(!changedLeft) {
-                    scalePos.x += scaleAmount
-                    scaleDims.x -= scaleAmount
-                    changedLeft = true;
-                }
-                if(!changedTop) {
-                    scalePos.z -= scaleAmount;
-                    scaleDims.z -= scaleAmount;
-                    changedTop = true;
-                }
-            }
-            if(!hasNeighbors.bottomLeft) {
-                if(!changedLeft) {
-                    scalePos.x += scaleAmount
-                    scaleDims.x -= scaleAmount
-                    changedLeft = true;
-                }
-                if(!changedBottom) {
-                    scalePos.z += scaleAmount;
-                    scaleDims.z -= scaleAmount;
-                    changedBottom = true;
-                }
-            }
-            if(!hasNeighbors.topRight) {
-                if(!changedRight) {
-                    scalePos.x -= scaleAmount
-                    scaleDims.x -= scaleAmount
-                    changedRight = true;
-                }
-                if(!changedTop) {
-                    scalePos.z -= scaleAmount;
-                    scaleDims.z -= scaleAmount;
-                    changedTop = true;
-                }
-            }
-            if(!hasNeighbors.bottomRight) {
-                if(!changedRight) {
-                    scalePos.x -= scaleAmount
-                    scaleDims.x -= scaleAmount
-                    changedRight = true;
-                }
-
-                if(!changedBottom) {
-                    scalePos.z += scaleAmount;
-                    scaleDims.z -= scaleAmount;
-                    changedBottom = true;
-                }
-            } */
-            var exportBoxGeo = new THREE.BoxGeometry(scaleDims.x, exportBoxHeight, scaleDims.z);
-            var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
-            var exportBoxMesh = new THREE.Mesh(exportBoxGeo, exportBoxMaterial);
-
-            exportBoxMesh.position.set(scalePos.x, islandObjects[island][currPlane].position.y, scalePos.z);
-            tempScene.add(exportBoxMesh);
-
-            changedLeft = false;
-            changedRight = false;
-            changedTop = false;
-            changedBottom = false;
-        }
-    }
-    tempScene.scale.set(25.4, 25.4, 25.4)
-    // scene.add(tempScene);
-
-    //For some reason with STLExporter, you need to give it a renderer for it to export the scene properly
-    var renderer2 = new THREE.WebGLRenderer({antialias: true});
-    renderer2.setClearColor("#f5f5f5");
-    renderer2.setSize(window.innerWidth,window.innerHeight);
-    renderer2.render(tempScene, camera);
-    console.log(tempScene)
-
-    var exporter = new THREE.STLExporter();
-    var str = exporter.parse(tempScene); // Export the scene
-    var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
-    saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+    var loader = new THREE.STLLoader();
 
     
     //Create Second STL File
     var tempScene2 = new THREE.Scene()
     var randomNumArray = []
-    var loader = new THREE.STLLoader();
-    loader.load( 'photos/active.stl', function (inputGeometry) {
+    loader.load( 'photos/active_cell.stl', function (inputGeometry) {
         for(var island = 0; island < numIslands; island++) {
             for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
                 var randomNum = Math.random()
-                if(randomNum < .5) {
+                if(randomNum >= .5) {
                     var posX = islandObjects[island][currPlane].position.x;
                     var posY = islandObjects[island][currPlane].position.y;
                     var posZ = islandObjects[island][currPlane].position.z;
@@ -471,14 +377,13 @@ function exportObjects() {
         }
     });
     var counter = 0
-    loader.load( 'photos/deactive.stl', function (inputGeometry) {
+    loader.load( 'photos/deact_cell.stl', function (inputGeometry) {
         for(var island = 0; island < numIslands; island++) {
             for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
-                if(randomNumArray[counter] >= .5) {
+                if(randomNumArray[counter] < .5) {
                     var posX = islandObjects[island][currPlane].position.x;
                     var posY = islandObjects[island][currPlane].position.y;
                     var posZ = islandObjects[island][currPlane].position.z;
-                    console.log(posX + " " + posY + " " + posZ)
                     var material = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
                     var tempMesh = new THREE.Mesh( inputGeometry, material );
                     // tempMesh.position.set( islandObjects[island][currPlane].position.x, islandObjects[island][currPlane].position.y, islandObjects[island][currPlane].position.z);
@@ -490,8 +395,8 @@ function exportObjects() {
                 counter++
             }
         }
-        console.log(tempScene2)
         // scene.add(tempScene2)
+        tempScene2.scale.set(25.4, 25.4, 25.4)
 
         var renderer3 = new THREE.WebGLRenderer({antialias: true});
         renderer3.setClearColor("#f5f5f5");
@@ -499,14 +404,196 @@ function exportObjects() {
         renderer3.render(tempScene2, camera);
         
             
-        tempScene2.scale.set(25.4, 25.4, 25.4)
         var exporter2 = new THREE.STLExporter();
         var str2 = exporter2.parse(tempScene2); // Export the scene
         var blob2 = new Blob( [str2], { type : 'text/plain' } ); // Generate Blob from the string
         saveAs( blob2, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
     });
 
+    loader.load( 'photos/lid_coupling.stl', function (inputGeometry) {
+        counter = 0;
+            for(var island = 0; island < numIslands; island++) {
+                for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
+                    if(randomNumArray[counter] >= .5) {
+                        scalePos.x = islandObjects[island][currPlane].position.x;
+                        scalePos.z = islandObjects[island][currPlane].position.z;
+                        scaleDims.x = 1
+                        scaleDims.z = 1
+                        var hasNeighbors = boxHasNeighbors(islandObjects[island][currPlane], island);
+                        if(!hasNeighbors.left && !changedLeft) {
+                            scalePos.x += scaleAmount
+                            scaleDims.x -= scaleAmount
+                            changedLeft = true;
+                        }
+                        if(!hasNeighbors.right && !changedRight) {
+                            scalePos.x -= scaleAmount
+                            scaleDims.x -= scaleAmount
+                            changedRight = true;
+                        }
+                        if(!hasNeighbors.top && !changedTop) {
+                            scalePos.z -= scaleAmount;
+                            scaleDims.z -= scaleAmount;
+                            changedTop = true;
+                        }
+                        if(!hasNeighbors.bottom && !changedBottom) {
+                            console.log("Has neighbor under")
+                            scalePos.z += scaleAmount;
+                            scaleDims.z -= scaleAmount;
+                            changedBottom = true;
+                        }
+                        /* if(!hasNeighbors.topLeft) {
+                            console.log("Has top left child")
+                            if(changedLeft) {
+                                console.log("Changed left")
+                                scalePos.x -= scaleAmount;
+                                scaleDims.x -= scaleAmount
+                                changedLeft = true;
+                            }
+                            if(changedTop) {
+                                console.log("Changed top")
+                                scalePos.z += scaleAmount;
+                                scaleDims.z -= scaleAmount;
+                                changedTop = true;
+                            }
+                            console.log("new")
+                        } */
+                        /* if(!hasNeighbors.bottomLeft) {
+                            if(!changedLeft) {
+                                scalePos.x += scaleAmount
+                                scaleDims.x -= scaleAmount
+                                changedLeft = true;
+                            }
+                            if(!changedBottom) {
+                                scalePos.z += scaleAmount;
+                                scaleDims.z -= scaleAmount;
+                                changedBottom = true;
+                            }
+                        }
+                        if(!hasNeighbors.topRight) {
+                            if(!changedRight) {
+                                scalePos.x -= scaleAmount
+                                scaleDims.x -= scaleAmount
+                                changedRight = true;
+                            }
+                            if(!changedTop) {
+                                scalePos.z -= scaleAmount;
+                                scaleDims.z -= scaleAmount;
+                                changedTop = true;
+                            }
+                        }
+                        if(!hasNeighbors.bottomRight) {
+                            if(!changedRight) {
+                                scalePos.x -= scaleAmount
+                                scaleDims.x -= scaleAmount
+                                changedRight = true;
+                            }
+        
+                            if(!changedBottom) {
+                                scalePos.z += scaleAmount;
+                                scaleDims.z -= scaleAmount;
+                                changedBottom = true;
+                            }
+                        } */
+                        // var exportBoxGeo = new THREE.BoxGeometry(scaleDims.x, exportBoxHeight, scaleDims.z);
+                        var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
+                        var exportBoxMesh;
+                        exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
+                        var scaleNum = 1.15
+                        exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum * scaleDims.x, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum * scaleDims.z);
+                        exportBoxMesh.rotation.set(Math.PI / 2, 0, 0);
+        
+                        exportBoxMesh.position.set(scalePos.x, 1, scalePos.z);
+                        tempScene.add(exportBoxMesh);
+        
+                        changedLeft = false;
+                        changedRight = false;
+                        changedTop = false;
+                        changedBottom = false;
+                        counter++;
+                    }
+                }
+            }
+        });
 
+        loader.load( 'photos/deact_coupl.stl', function (inputGeometry) {
+            counter = 0;
+            for(var island = 0; island < numIslands; island++) {
+                for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
+                    if(randomNumArray[counter] < .5) {
+                        scalePos.x = islandObjects[island][currPlane].position.x;
+                        scalePos.z = islandObjects[island][currPlane].position.z;
+                        scaleDims.x = 1
+                        scaleDims.z = 1
+                        var hasNeighbors = boxHasNeighbors(islandObjects[island][currPlane], island);
+                        if(!hasNeighbors.left && !changedLeft) {
+                            scalePos.x += scaleAmount
+                            scaleDims.x -= scaleAmount
+                            changedLeft = true;
+                        }
+                        if(!hasNeighbors.right && !changedRight) {
+                            scalePos.x -= scaleAmount
+                            scaleDims.x -= scaleAmount
+                            changedRight = true;
+                        }
+                        if(!hasNeighbors.top && !changedTop) {
+                            scalePos.z -= scaleAmount;
+                            scaleDims.z -= scaleAmount;
+                            changedTop = true;
+                        }
+                        if(!hasNeighbors.bottom && !changedBottom) {
+                            console.log("Has neighbor under")
+                            scalePos.z += scaleAmount;
+                            scaleDims.z -= scaleAmount;
+                            changedBottom = true;
+                        }
+                    
+                        var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
+                        var exportBoxMesh;
+                        exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
+                        var scaleNum = 1.15
+                        exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum * scaleDims.x, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum * scaleDims.z);
+                        exportBoxMesh.rotation.set(Math.PI / 2, 0, 0);
+        
+                        exportBoxMesh.position.set(scalePos.x, 1, scalePos.z);
+                        tempScene.add(exportBoxMesh);
+        
+                        changedLeft = false;
+                        changedRight = false;
+                        changedTop = false;
+                        changedBottom = false;
+                        counter++;
+                    }
+                }
+            }
+        });
+        loader.load( 'photos/deact_coupl.stl', function (inputGeometry) {
+            counter = 0;
+            for(var i = 0; i < scene.children.length; i++) {
+                if(scene.children[i].name == "Grid Box" && scene.children[i].material.opacity == 0) {
+                    var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
+                    var exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
+                    var scaleNum = 1.15
+                    exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum);
+                    exportBoxMesh.rotation.set(Math.PI / 2, 0, 0);
+                    exportBoxMesh.position.set(scene.children[i].position.x, .75, scene.children[i].position.z);
+                    tempScene.add(exportBoxMesh);
+                }
+            }
+            console.log(tempScene);
+            tempScene.scale.set(25.4, 25.4, 25.4)
+            sleep(2000)
+    
+            //For some reason with STLExporter, you need to give it a renderer for it to export the scene properly
+            var renderer2 = new THREE.WebGLRenderer({antialias: true});
+            renderer2.setClearColor("#f5f5f5");
+            renderer2.setSize(window.innerWidth,window.innerHeight);
+            renderer2.render(tempScene, camera);
+    
+            var exporter = new THREE.STLExporter();
+            var str = exporter.parse(tempScene); // Export the scene
+            var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
+            saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+        });
 }
 
 function sleep(milliseconds) {
@@ -561,19 +648,19 @@ function boxHasNeighbors(currObject, islandNum) {
     }
 
     //add edge cases later
-    if(leftVal && topVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) - gridSizeY])) {
+    if(!leftVal && !topVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) - gridSizeY])) {
         topLeftVal = false;
     }
 
-    if(rightVal && topVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex + 1) - gridSizeY])) {
+    if(rightVal && topVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) - gridSizeY])) {
         topRightVal = false;
     }
 
-    if(leftVal && bottomVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) + gridSizeY])) {
+    if(leftVal && bottomVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex + 1) + gridSizeY])) {
         bottomLeftVal = false;
     }
 
-    if(rightVal && bottomVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex + 1) + gridSizeY])) {
+    if(rightVal && bottomVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) + gridSizeY])) {
         bottomRightVal = false;
     }
     return {left: leftVal, right: rightVal, top: topVal, bottom: bottomVal, topLeft: topLeftVal, bottomLeft: bottomLeftVal, topRight: topRightVal, bottomRight: bottomRightVal};
@@ -619,14 +706,29 @@ function selectIsland(event) {
         }
     }
     if(islandObjects.length == 0 || selectedIslands.length == 0) return;
+    changeSelectedIslands(selectedIslands[0].material.name)
+}
+
+function changeSelectedIslands(toElasticity) {
+    var selectedIslands = [];
+    for(var i = 0; i < islandObjects.length; i++) {
+        for(var j = 0; j < islandObjects[i].length; j++) {
+            if(toElasticity == (islandObjects[i])[j].material.name) {
+                selectedIslands = islandObjects[i];
+            }
+        }
+    }
 
     //Change the color of all objects in selected group
+    changeStylesheetRule(document.styleSheets[0], ".selectorSquare", "background-color", rgbToHex(selectedIslands[0].material.color));
+    document.getElementById("newElasticityInput").value = selectedIslands[0].material.name
+
+
     for(var i = 0; i < selectedIslands.length; i++) {
-        console.log(selectedIslands[i]);
         selectedIslands[i].material.color.setHex(hsvToRgb(0, 0, 0));
     }
 
-    tab("menuCtrlTab4");
+    tab("menuCtrlTab3");
 }
 
 function changeAllElasticities() {

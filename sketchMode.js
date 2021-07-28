@@ -11,7 +11,8 @@ function createBox(point1, point2) {
     line1Mesh.name = "Grid Lines";
     
     var planeGeo = new THREE.PlaneGeometry( Math.max(point1.x, point2.x) - Math.min(point1.x, point2.x), Math.max(point1.y, point2.y) - Math.min(point1.y, point2.y), 32, 32 );
-    planeMat = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide, opacity: 0, transparent: true} );
+    planeMat = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, opacity: 0, transparent: false} );
+    // planeMat.color.setHex(hsvToRgb((elasticity/100), 1, 1));
     planeMesh = new THREE.Mesh( planeGeo, planeMat );
     planeMesh.rotation.setFromVector3(new THREE.Vector3( Math.PI / 2, 0, 0));
     var halfX = (Math.max(point1.x, point2.x) - Math.min(point1.x, point2.x))/2
@@ -19,6 +20,7 @@ function createBox(point1, point2) {
     planeMesh.position.set(Math.max(point1.x, point2.x) - halfX, -.0005, Math.max(point1.y, point2.y) - halfY)
     planeMesh.name = "Grid Box"
     planeMesh.material.name = elasticity
+    elasticityObjectsForPhysics.push(planeMesh);
     scene.add(line1Mesh)
     scene.add(planeMesh)
     return planeMesh
@@ -33,7 +35,6 @@ function createGrid(xBoxNum, yBoxNum, boxWidth) {
         }
     }
 }
-
 
 function toggleSketchMode() {
     sketchMode = !sketchMode;
@@ -63,6 +64,7 @@ function findGridOverlap(objectsOverlapped) {
                     intersects[i].object.material.color.setHex(hsvToRgb((elasticity/100), 1, 1));
                     createBlock({x: intersects[i].object.position.x, y: -.5, z: intersects[i].object.position.z});
                     elasticityObjectsForPhysics.push(intersects[i].object);
+                    updateElasticityDisplay()
                 }
             }
         }
@@ -77,6 +79,51 @@ function findGridOverlap(objectsOverlapped) {
         }
     } 
 }
+function updateElasticityDisplay() {
+    numOfIslands()
+    NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
+        for(var i = this.length - 1; i >= 0; i--) {
+            if(this[i] && this[i].parentElement) {
+                this[i].parentElement.removeChild(this[i]);
+            }
+        }
+    }
+    if(islandObjects.length == 0) {
+        document.getElementById("IslandSelector").style.display = "none"
+    } else {
+        document.getElementById("IslandSelector").style.display = "block"
+    }
+
+    document.getElementsByClassName("keyButton").remove();
+
+    var islandButtons = []
+    for(var i = 0; i < islandObjects.length; i++) {
+        let btn = document.createElement("button");
+        btn.innerHTML = islandObjects[i][0].material.name;
+        btn.id = "islandButton"
+        console.log(islandObjects.length)
+        var leftMargin = 40 + 70 * ((islandButtons.length) % 3);
+        var topMargin = 50 + 70 * Math.floor((islandButtons.length) / 3)
+        // console.log(leftMargin)
+        // console.log(topMargin)
+        btn.style = "margin-left: " + leftMargin + "px; margin-top: " + topMargin + "px; background-color: " + rgbToHex(islandObjects[i][0].material.color)
+        btn.classList.add("keyButton")
+
+        btn.addEventListener('click', (e) => {
+            console.log(e.target)
+            console.log(e.target.name)
+            changeSelectedIslands(e.target.innerHTML)
+        });
+
+        islandButtons.push(btn)
+        document.getElementById("menuCtrlForm3").appendChild(btn);
+
+        
+    }
+    changeStylesheetRule(document.styleSheets[0], ".sketch", "height", (175 + 70 * (Math.floor((islandButtons.length - 1) / 3) + 1)).toString().concat("px"));
+    changeStylesheetRule(document.styleSheets[0], ".islandSquare", "height", (70 * (Math.floor((islandButtons.length - 1) / 3) + 1)).toString().concat("px"));
+}
+
 function checkBallPos() {
     if(isSimulating) {
         objectsOverlapped = raycaster.intersectObjects(scene.children);
@@ -118,3 +165,12 @@ function hsvToRgb(h, s, v) {
     }
     return (Math.round(r * 255) * Math.pow(16, 4) + Math.round(g * 255) * Math.pow(16, 2) + Math.round(b * 255));
 }
+
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+  }
+  
+  function rgbToHex(color) {
+    return "#" + componentToHex(color.r * 255) + componentToHex(color.g * 255) + componentToHex(color.b * 255);
+  }

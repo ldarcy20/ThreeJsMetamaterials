@@ -1,6 +1,25 @@
+7/7
 -swap out stl files with actual ones
 -slider for mass in simulator mode and will be used in computation
 -list view in selector mode for color and current elasticity, and max bounce back (with mm)
 -change background of wheel to gray and put in sketch mode dropdown
 -put selector in sketch mode dropdown, with list view
 -when you start its a 50 elasticity region
+
+7/14
+-activated and deactived cells are use different coupling stl files
+-alignment of UI
+    - group logically, draw and delete
+-slider for mass
+-elasticity wheel in sketch mode
+
+7/21
+-unselected regions are deactivated
+-coupling plane has hooks on activated cells and plane sheet on deactivated
+-icons to mass slider
+-list containing all regions with elasticity and bounceback
+
+7/18
+-multi select on shift, otherwise default to one
+-make program runnable through github somehow
+-fix coupled and activated/deactivated layer
