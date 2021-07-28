@@ -1,0 +1,4 @@
+- Run using Visual Studio Code
+- Install LiveServer by Ritwick Dey
+- Click "go live" in bottom right corner
+- Go to 127.0.0.1/editor.html
