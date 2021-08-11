@@ -10,14 +10,6 @@
 </head>
 
 <body id="body">
-  <div class="square" id="roundedSquare"></div>
-  <img class="hsvimg" src="photos/HSVCircle.png" id="color selector">
-  <input class="elasticityField" name="elasticityTxt" type="text" maxlength="10" id="elasticityText"
-    onKeyUp="updateElasticity()" />
-  <svg height="2000" width="2000" style="position:absolute; pointer-events: none">
-    <line id="colorWheelLine" class="wheelLine" x1="0" y1="0" x2="0" y2="0" />
-  </svg>
-
   <div id="menuDiv">
     <div id="menuCtrl">
       <div id="menuCtrlWrapper" class="menuWrapper">
@@ -32,47 +24,50 @@
           <!-- Grid Settings Menu Item -->
           <div id="menuCtrlTabs" class="menuTabs">
             <div id="menuCtrlTab1" class="clickable tab active" onclick="tab(this.id);">
-              <div class='tabText'>Import/Export</div>
+              <div class='tabText'>Import</div>
               <img id="menuCtrlTab1arrow" src="photos/arrow.png" class="arrow">
             </div>
           </div>
           
           <div id='menuCtrlFormDiv1'>
             <div id="menuCtrlForm1" class="menuForm importExport">
-              <button class="menuButton exportStl" onClick="exportObjects()">export .STL</button>
-              <button class="menuButton import" onClick="promptFileExplorer()">import</button>
-              <button class="menuButton export" onClick="saveScene()">export</button>
+              <button class="menuButton2 import" onClick="promptFileExplorer()">import</button>
+              <button class="menuButton2 applyButton3" onClick="changeGridSize()">Apply</button>
               <br>
-              <input class="textInput" style="float:left;margin-left:-170px;margin-top:100px;" maxlength="4"
+              <input class="textInput" style="position:absolute;margin-left:20px;margin-top:10px;" maxlength="4"
                 id="gridInputX" />
-              <input class="textInput" style="float:left;margin-left:-100px;margin-top:100px;" maxlength="4"
+              <input class="textInput" style="position:absolute;margin-left:90px;margin-top:10px;" maxlength="4"
                 id="gridInputY" />
-              <div style="float:left; margin-left:-116px; margin-top:100px; font-size:20px;">x</div>
+              <div style="position:absolute; margin-left:72px; margin-top:10px; font-size:20px;">x</div>
               <br>
-              <div style="margin-left:30px; margin-top: 120px;">Box Size: </div>
-              <input class="textInput" style="float:left;margin-top:-20px; margin-left:90px;" maxlength="4"
+              <div style="margin-left:30px; margin-top: 30px;">Box Size: </div>
+              <input class="textInput" style="float:left;margin-top:-10px; margin-left:90px;" maxlength="4"
                 id="gridInputBoxSize" />
-              <button class="menuButton applyButton3" onClick="changeGridSize()">Apply</button>
             </div>
           </div>
 
           <!-- Sketch Mode Menu Item -->
           <div id="menuCtrlTabs" class="menuTabs">
             <div id="menuCtrlTab3" class="clickable tab inActive" onclick="tab(this.id);">
-              <div class="tabText">Sketch Mode </div>
+              <div class="tabText">Define Material</div>
               <img id="menuCtrlTab3arrow" src="photos/arrow.png" class="arrow">
             </div>
           </div>
 
           <div id='menuCtrlFormDiv3'>
             <div id="menuCtrlForm3" class="menuForm sketch hidden">
-              <button class="menuButton sketchButton" onClick="toggleSketchMode()">Sketch</button>
-              <button class="menuButton applyButton2" onClick="changeAllElasticities()">Apply</button>
-              <button class="menuButton removeButton" onClick="removeSelectedRegions()">Remove</button>
-              <input class="textInput" style="position:absolute;margin-top:100px; margin-left:70px; background-color:rgba(0, 0, 0, 0); border: none; outline: none;" maxlength="4" id="newElasticityInput" />
-              <div style="position:absolute;margin-left: 60px; margin-top: 70px;">Elasticity</div>
+              <div style="position:absolute;margin-top:5px;margin-left:20px;font-size:17px;">Tools</div>
+              <button class="menuButton2 sketchButton" onClick="toggleSketchMode('add')">Select Area</button>
+              <button class="menuButton2 applyButton2" onClick="toggleSketchMode('delete')">Delete Area</button>
+              <div style="position:absolute;margin-top:90px;margin-left:20px;font-size:17px">Elasticity Slider</div>
+              <img src="photos/HSVstrip.png" style="position:absolute;margin-top:114px;margin-left:20px;width:180px;height:35px;z-index: 0; border: 2px solid black">
+              <div class="slidecontainer" style="position:absolute;margin-top:80px;z-index:10;">
+                <input type="range" min="0" max="100" value="50" class="elasticitySlider" id="elasticitySlider">
+              </div>
+              <input class="textInput" style="position:absolute;margin-top:123px; margin-left:235px; background-color:rgba(0, 0, 0, 0); border: none; outline: none;" maxlength="4" id="newElasticityInput" onchange="elasticityInputChanged(this.value)" />
               <div class="selectorSquare"></div>
-              <div class="islandSquare" id="IslandSelector"></div>
+
+              <div style="position:absolute;margin-left: 20px; margin-top: 22px; font-size:17px">Current Elasticities</div>
             </div>
           </div>
 
@@ -86,16 +81,33 @@
 
           <div id='menuCtrlFormDiv2'>
             <div id="menuCtrlForm2" class="menuForm simulate hidden">
-              <button class="menuButton importStl" onClick="togglePhysicsSimulator()">Simulate Mode</button>
-              <button class="menuButton clearBallsButton" onClick="clearAllBalls()">Clear Balls</button>
-              <div class="slidecontainer">
-                <input type="range" min="0" max="150" value="50" class="daSlider" id="myRange">
+              <button class="menuButton2 importStl" onClick="togglePhysicsSimulator()">Simulate Mode</button>
+              <button class="menuButton2 clearBallsButton" onClick="clearAllBalls()">Clear Balls</button>
+              <div class="slidecontainer" style="position:absolute">
+                <input type="range" min="0" max="150" value="50" class="rangeMassSlider" id="myRange">
               </div>
-              <img src="photos/feather.png" style="position:absolute;width:25px; height:25px; margin-top:-55px; margin-left:2px">
-              <img src="photos/kettlebell.png" style="position:absolute;width:25px; margin-top:-60px; margin-left:272px">
-              <input class="textInput" style="position:absolute; margin-left:130px; margin-top:-30px; background-color:rgba(0, 0, 0, 0); border: none" id="rangeMassText" value="50"></div>
+              <img src="photos/feather.png" style="position:absolute;width:25px; height:25px; margin-top:77px; margin-left:2px">
+              <img src="photos/kettlebell.png" style="position:absolute;width:25px; margin-top:72px; margin-left:272px">
+              <input class="textInput" style="position:absolute; margin-left:130px; margin-top:110px; background-color:rgba(0, 0, 0, 0); border: none" id="rangeMassText" value="50"></div>
             </div>
           </div>
+
+          <!-- Export Menu Items-->
+          <div id="menuCtrlTabs" class="menuTabs">
+            <div id="menuCtrlTab4" class="clickable tab inActive" onclick="tab(this.id);">
+              <div class="tabText">Export</div>
+              <img id="menuCtrlTab4arrow" src="photos/arrow.png" class="arrow">
+            </div>
+          </div>
+
+          <div id='menuCtrlFormDiv4'>
+            <div id="menuCtrlForm4" class="menuForm exportTab hidden">
+              <button class="menuButton2 exportStl" onClick="exportObjects()">export .STL</button>
+              <button class="menuButton2 export" onClick="saveScene()">export .JSON</button>
+            </div>
+          </div>
+
+
         </div>
       </div>
     </div>

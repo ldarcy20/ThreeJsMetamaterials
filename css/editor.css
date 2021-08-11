@@ -1,6 +1,7 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto+Condensed:400,300);
 
 body {
+  image-rendering: pixelated;
     font-family: 'Roboto Condensed';
     overflow: hidden;
     margin: 0;
@@ -80,11 +81,6 @@ body {
     left:475px;
     top:20px;
   }
-  .export {
-    left:1840px;
-    top:10px;
-    width:60px;
-  }
   .clear {
     left: 285px;
     top:10px;
@@ -162,9 +158,10 @@ canvas {
 
 
 .menuForm {
-    padding: 5px;
-    background-color: #d2d2d2;
-    width:300px;
+  z-index:0;
+  padding: 5px;
+  background-color: #d2d2d2;
+  width:300px;
 }
  
 
@@ -179,10 +176,12 @@ canvas {
 }
 
 .menuTabs {
+  z-index: 0;
     white-space: nowrap;
 }
 
 .menuTabs div.tab {
+  z-index:0;
     float: top;
     height: 35px;
     width: 300px;
@@ -193,6 +192,9 @@ canvas {
 }
 .menuTabs div.active {
   opacity: 1;
+  border-style: solid;
+  border-width:0px 0px 2px 0px;
+  border-color:#777777;
 }
 
 .menuTabs div.inActive {
@@ -235,6 +237,15 @@ canvas {
     margin-left:0px;
     border: 0px;
 }
+.menuButton2 {
+  position:absolute;
+  width:120px;
+  height:40px;
+  background-color: #454545;
+  color:white;
+  border: 0px;
+  border-radius:8px;
+}
 .arrow{
   position:absolute;
   width: 20px;
@@ -246,41 +257,47 @@ canvas {
   transform: scaleY(-1);
 }
 .importExport {
-    height: 200px;
+    height: 140px;
 }
 .sketch {
-  height: 175px;
+  height: 200px;
+}
+.exportTab {
+  height:80px;
 }
 .importStl {
-    float:left;
-    margin-left:25px;
+    position: absolute;
+    margin-left:20px;
+    margin-top: 20px;
 }
 .exportStl {
-    float:left;
-    margin-left:90px;
+  position:absolute;
+  margin-left:20px;
+  margin-top: 20px;
 }
 .import {
-    position:absolute;
-    margin-left:-35px;
-    margin-top: 60px;
+    margin-left:160px;
+    margin-top: 20px;
 }
 .export {
-    float: left;
-    margin-left:-160px;
-    margin-top:60px;
+  position:absolute;
+  float: left;
+  margin-left:160px;
+  margin-top:20px;
 }
 
 .simulate {
-    height:120px;
+    height:140px;
 }
 
 .sketchButton {
   position:absolute;
-  margin-left:100px;
-  margin-top: 0px;
+  margin-left:20px;
+  margin-top: 30px;
 }
 .clearBallsButton {
-  margin-left:20px;
+  margin-left:160px;
+  margin-top: 20px;
 }
 
 .gridSettings {
@@ -299,13 +316,12 @@ canvas {
 }
 .applyButton2 {
   position:absolute;
-  margin-left:167px;
-  margin-top: 60px;
+  margin-left:160px;
+  margin-top: 30px;
 }
 .applyButton3 {
-  position:absolute;
-  margin-left: 22px;
-  margin-top: -55px;
+  margin-left: 160px;
+  margin-top: 80px;
 }
 .removeButton {
   position:absolute;
@@ -313,24 +329,94 @@ canvas {
   margin-top:120px;
 }
 .selectorSquare {
-  margin-left: 33px;
-  margin-top: 90px;
-  width: 100px;
-  height: 40px;
+  margin-left: 218px;
+  margin-top: 114px;
+  width: 70px;
+  height: 35px;
   border-radius: 5px;
-  border: 1px solid black;
+  border: 2px solid black;
   background-color: #d2d2d2;
 }
 
-.daSlider{
-  writing-mode: bt-lr; /* IE */
-  position: relative;
-  margin-left:30px;
-  height: 80px;
-  width: 130px;
-  background:#fff;
-  border-radius: 10px;
-  padding: 0 65px 0 45px;
+.rangeMassSlider {
+  margin-top:40px;
+  z-index: 100;
+  -webkit-appearance: none;
+  margin-left:20px;
+  width:260px;
+  height:100px;
+  background: transparent;
+}
+.rangeMassSlider::-webkit-slider-runnable-track {
+  z-index: 100;
+  width: 100%;
+  height: 8.4px;
+  cursor: pointer;
+  border: 1px solid black;
+  /* border: 0.2px solid #010101; */
+}
+.rangeMassSlider::-ms-track {
+  z-index: 100;
+  margin-left:20px;
+  width:260px;
+  cursor: pointer;
+  border: 1px solid black;
+  /* Hides the slider so custom styles can be added */
+  background: transparent; 
+  border-color: transparent;
+  color: transparent;
+}
+.rangeMassSlider::-webkit-slider-thumb {
+  z-index: 100;
+  -webkit-appearance: none;
+  border: 1px solid #000000;
+  height: 36px;
+  width: 5px;
+  background: black;
+  cursor: pointer;
+  margin-top: -12px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; /* Add cool effects to your sliders! */
+}
+
+
+/* Elasticity Slider */
+
+.elasticitySlider {
+  z-index: 100;
+  -webkit-appearance: none;
+  margin-left:20px;
+  width:180px;
+  height:100px;
+  background: transparent;
+}
+.elasticitySlider::-webkit-slider-runnable-track {
+  z-index: 100;
+  width: 100%;
+  height: 8.4px;
+  cursor: pointer;
+  /* border: 0.2px solid #010101; */
+}
+.elasticitySlider::-ms-track {
+  z-index: 100;
+  margin-left:20px;
+  width:180px;
+  cursor: pointer;
+
+  /* Hides the slider so custom styles can be added */
+  background: transparent; 
+  border-color: transparent;
+  color: transparent;
+}
+.elasticitySlider::-webkit-slider-thumb {
+  z-index: 100;
+  -webkit-appearance: none;
+  border: 1px solid #000000;
+  height: 36px;
+  width: 5px;
+  background: black;
+  cursor: pointer;
+  margin-top: -12px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; /* Add cool effects to your sliders! */
 }
 
 .keyButton {
@@ -342,14 +428,37 @@ canvas {
   background-color: black;
 }
 
-.islandSquare {
+.elasticityIslandSquare {
   position: absolute;
-  margin-left: 29px;
-  margin-top: 40px;
-  width: 210px;
-  height: 70px;
-  border-radius: 5px;
+  width: 20px;
+  height: 20px;
+  z-index: 100;
   border: 1px solid black;
-  background-color: #d2d2d2;
-  display: none;
+  margin-left: 50px;
+}
+
+.elasticityIslandText {
+  position: absolute;
+  font-size: 15px;
+  margin-left: 80px;
+}
+
+.elasticityEditButton {
+  position: absolute;
+  margin-left: 150px;
+  background: url("../photos/sketch.png");
+  background-size: 50px 50px;
+  border: none;
+  width: 50px;
+  height: 50px;
+}
+
+.elasticityDeleteButton {
+  position: absolute;
+  margin-left: 200px;
+  background: url("../photos/delete.png");
+  background-size: 30px 30px;
+  border: none;
+  width: 30px;
+  height: 30px;
 }

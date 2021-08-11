@@ -21,7 +21,8 @@ var gridSizeX = 20;
 var gridSizeY = 20;
 var gridBoxSize = .25
 var sketchPlane, intersects;
-var sketchMode = false;
+var addMode = false;
+var deleteMode = false;
 var boxGeoList = []
 var islandObjects = [];
 var physicsBlocks = [];
@@ -78,11 +79,12 @@ function animate() {
 
 /* Event listener for camera movement */
 function updateCamera(event) {
-    if(event.target == document.getElementById("myRange")) return
+    // Incase the event is a slider
+    if(event.target == document.getElementById("myRange") || event.target == document.getElementById("elasticitySlider")) return
 
-    //offset the camera x/y based on the mouse's position in the window
+    // Offset the camera x/y based on the mouse's position in the window
     event.preventDefault();
-    if (leftClickPressed && !sketchMode) {
+    if (leftClickPressed && !(addMode || deleteMode)) {
         theta = - ( ( event.clientX - mouseDown.x ) * 0.5 )
                 + onMouseDownTheta;
         phi = ( ( event.clientY - mouseDown.y ) * 0.5 )
@@ -104,7 +106,8 @@ function updateCamera(event) {
 
 /* Event listener for when the mouse is moved in the threejs canvas */
 function onDocumentMouseMove(event) {
-    if(event.target == document.getElementById("myRange")) return
+    // Incase event is a slider
+    if(event.target == document.getElementById("myRange") || event.target == document.getElementById("elasticitySlider")) return
 
     event.preventDefault();
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -141,7 +144,7 @@ function addEventListeners() {
             rightClickPressed = true;
         }
 
-        if(!sketchMode && !isSimulating) {
+        if(!(addMode || deleteMode) && !isSimulating) {
             selectIsland(e);
         }
     });
@@ -160,10 +163,6 @@ function addEventListeners() {
             rightClickPressed = false;
         }
     });
-    document.getElementById("color selector").addEventListener('mousedown', (e) => {
-        mouseDownX = e.clientX;
-        mouseDownY = e.clientY;
-    });
 
     window.addEventListener('resize', () => {
         renderer.setSize(window.innerWidth,window.innerHeight);
@@ -174,8 +173,8 @@ function addEventListeners() {
     });
     document.addEventListener('mousemove', updateCamera, false);
     document.addEventListener('mousemove', onDocumentMouseMove, false);
-    document.getElementById('color selector').addEventListener('mousemove', colorSelector, false); 
     document.getElementById('myRange').addEventListener('change', rangeMassChanged, false);
+    document.getElementById('elasticitySlider').addEventListener('input', elasticitySliderChanged, false);
 }
 
 /* Export threeJS scene to JSON file */
@@ -281,61 +280,18 @@ function numOfIslands() {
     return islands;
 }
 
-/* Color selector wheel */
-function colorSelector(e) {
-    if(!isMouseDown) return;
-    var style = window.getComputedStyle(document.getElementById("color selector"))
-    var midX = parseInt(style.getPropertyValue('left'), 10) + 100;
-    var midY = parseInt(style.getPropertyValue('top'), 10) + 100;
-    var x = e.clientX - midX; //x position within the element.
-    var y = e.clientY - midY;  //y position within the element.
-
-    var distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-    if(distance > 50 && distance < 80) {
-        var angle = 0;
-        if(y > 0) {
-            angle = toDegrees(Math.atan2(y, x));
-        } else {
-            angle = toDegrees(Math.atan2(y, x)) + 360;
-        }
-        document.getElementById("colorWheelLine").x1.baseVal.value = (50 * Math.cos(toRadians(angle))) + midX;
-        document.getElementById("colorWheelLine").y1.baseVal.value = (50 * Math.sin(toRadians(angle))) + midY;
-        document.getElementById("colorWheelLine").x2.baseVal.value = (80 * Math.cos(toRadians(angle))) + midX;
-        document.getElementById("colorWheelLine").y2.baseVal.value = (80 * Math.sin(toRadians(angle))) + midY; 
-        var displayAngle = (angle / 3.6) + 25;
-        if(displayAngle > 100) displayAngle = displayAngle - 100; 
-        document.getElementById("elasticityText").value = (Math.round(displayAngle)).toString();
-        elasticity = (Math.round(displayAngle));
-    } else if (distance >= 80) {
-        var xChange = e.clientX - mouseDownX;
-        var yChange = e.clientY - mouseDownY;
-        mouseDownX = e.clientX;
-        mouseDownY = e.clientY;
-        var currLeftSquare = parseInt(getStyleSheetRule(document.styleSheets[0], ".square", "left"));
-        var currTopSquare = parseInt(getStyleSheetRule(document.styleSheets[0], ".square", "top"));
-        var currLeftImg = parseInt(getStyleSheetRule(document.styleSheets[0], ".hsvimg", "left"));
-        var currTopImg = parseInt(getStyleSheetRule(document.styleSheets[0], ".hsvimg", "top"));
-        var currLeftTxt = parseInt(getStyleSheetRule(document.styleSheets[0], ".elasticityField", "left"));
-        var currTopTxt = parseInt(getStyleSheetRule(document.styleSheets[0], ".elasticityField", "top"));
-        changeStylesheetRule(document.styleSheets[0], ".square", "left", (currLeftSquare += xChange).toString().concat("px"));
-        changeStylesheetRule(document.styleSheets[0], ".square", "top", (currTopSquare += yChange).toString().concat("px"));
-        changeStylesheetRule(document.styleSheets[0], ".hsvimg", "left", (currLeftImg += xChange).toString().concat("px"));
-        changeStylesheetRule(document.styleSheets[0], ".hsvimg", "top", (currTopImg += yChange).toString().concat("px"));
-        changeStylesheetRule(document.styleSheets[0], ".elasticityField", "left", (currLeftTxt += xChange).toString().concat("px"));
-        changeStylesheetRule(document.styleSheets[0], ".elasticityField", "top", (currTopTxt += yChange).toString().concat("px"));
-        document.getElementById("colorWheelLine").x1.baseVal.value += xChange;
-        document.getElementById("colorWheelLine").x2.baseVal.value += xChange;
-        document.getElementById("colorWheelLine").y1.baseVal.value += yChange;
-        document.getElementById("colorWheelLine").y2.baseVal.value += yChange;
-    } else {
-
-    }
+function rangeMassChanged(event) {
+    // console.log(document.getElementById("rangeMassText").value)
+    document.getElementById("rangeMassText").value = document.getElementById("myRange").value
 }
 
-function rangeMassChanged(event) {
-    console.log(document.getElementById("rangeMassText").value)
-    document.getElementById("rangeMassText").value = document.getElementById("myRange").value
-
+function elasticitySliderChanged(event) {
+    elasticity = event.target.value;
+    document.getElementById("newElasticityInput").value = elasticity
+}
+function elasticityInputChanged(newElasticity) {
+    elasticity = newElasticity
+    document.getElementById("elasticitySlider").value = elasticity
 }
 
 /* Creates STL file from threeJS scene */
@@ -410,6 +366,8 @@ function exportObjects() {
         saveAs( blob2, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
     });
 
+
+    // Coupling and decoupling layer
     loader.load( 'photos/lid_coupling.stl', function (inputGeometry) {
         counter = 0;
             for(var island = 0; island < numIslands; island++) {
@@ -419,83 +377,9 @@ function exportObjects() {
                         scalePos.z = islandObjects[island][currPlane].position.z;
                         scaleDims.x = 1
                         scaleDims.z = 1
-                        var hasNeighbors = boxHasNeighbors(islandObjects[island][currPlane], island);
-                        if(!hasNeighbors.left && !changedLeft) {
-                            scalePos.x += scaleAmount
-                            scaleDims.x -= scaleAmount
-                            changedLeft = true;
-                        }
-                        if(!hasNeighbors.right && !changedRight) {
-                            scalePos.x -= scaleAmount
-                            scaleDims.x -= scaleAmount
-                            changedRight = true;
-                        }
-                        if(!hasNeighbors.top && !changedTop) {
-                            scalePos.z -= scaleAmount;
-                            scaleDims.z -= scaleAmount;
-                            changedTop = true;
-                        }
-                        if(!hasNeighbors.bottom && !changedBottom) {
-                            console.log("Has neighbor under")
-                            scalePos.z += scaleAmount;
-                            scaleDims.z -= scaleAmount;
-                            changedBottom = true;
-                        }
-                        /* if(!hasNeighbors.topLeft) {
-                            console.log("Has top left child")
-                            if(changedLeft) {
-                                console.log("Changed left")
-                                scalePos.x -= scaleAmount;
-                                scaleDims.x -= scaleAmount
-                                changedLeft = true;
-                            }
-                            if(changedTop) {
-                                console.log("Changed top")
-                                scalePos.z += scaleAmount;
-                                scaleDims.z -= scaleAmount;
-                                changedTop = true;
-                            }
-                            console.log("new")
-                        } */
-                        /* if(!hasNeighbors.bottomLeft) {
-                            if(!changedLeft) {
-                                scalePos.x += scaleAmount
-                                scaleDims.x -= scaleAmount
-                                changedLeft = true;
-                            }
-                            if(!changedBottom) {
-                                scalePos.z += scaleAmount;
-                                scaleDims.z -= scaleAmount;
-                                changedBottom = true;
-                            }
-                        }
-                        if(!hasNeighbors.topRight) {
-                            if(!changedRight) {
-                                scalePos.x -= scaleAmount
-                                scaleDims.x -= scaleAmount
-                                changedRight = true;
-                            }
-                            if(!changedTop) {
-                                scalePos.z -= scaleAmount;
-                                scaleDims.z -= scaleAmount;
-                                changedTop = true;
-                            }
-                        }
-                        if(!hasNeighbors.bottomRight) {
-                            if(!changedRight) {
-                                scalePos.x -= scaleAmount
-                                scaleDims.x -= scaleAmount
-                                changedRight = true;
-                            }
-        
-                            if(!changedBottom) {
-                                scalePos.z += scaleAmount;
-                                scaleDims.z -= scaleAmount;
-                                changedBottom = true;
-                            }
-                        } */
+            
                         // var exportBoxGeo = new THREE.BoxGeometry(scaleDims.x, exportBoxHeight, scaleDims.z);
-                        var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
+                        var exportBoxMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
                         var exportBoxMesh;
                         exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
                         var scaleNum = 1.15
@@ -509,90 +393,56 @@ function exportObjects() {
                         changedRight = false;
                         changedTop = false;
                         changedBottom = false;
-                        counter++;
                     }
+                    counter++;
                 }
             }
-        });
+            console.log(randomNumArray)
 
-        loader.load( 'photos/deact_coupl.stl', function (inputGeometry) {
-            counter = 0;
-            for(var island = 0; island < numIslands; island++) {
-                for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
-                    if(randomNumArray[counter] < .5) {
-                        scalePos.x = islandObjects[island][currPlane].position.x;
-                        scalePos.z = islandObjects[island][currPlane].position.z;
-                        scaleDims.x = 1
-                        scaleDims.z = 1
-                        var hasNeighbors = boxHasNeighbors(islandObjects[island][currPlane], island);
-                        if(!hasNeighbors.left && !changedLeft) {
-                            scalePos.x += scaleAmount
-                            scaleDims.x -= scaleAmount
-                            changedLeft = true;
+            loader.load( 'photos/deact_coupl.stl', function (inputGeometry) {
+                counter = 0;
+                for(var island = 0; island < numIslands; island++) {
+                    for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
+                        if(randomNumArray[counter] < .5) {
+                            scalePos.x = islandObjects[island][currPlane].position.x;
+                            scalePos.z = islandObjects[island][currPlane].position.z;
+                            scaleDims.x = 1
+                            scaleDims.z = 1                    
+                        
+                            var exportBoxMaterial = new THREE.MeshBasicMaterial({color: 0xFF0000});
+                            var exportBoxMesh;
+                            exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
+                            var scaleNum = .97
+                            exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum * scaleDims.x, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum * scaleDims.z);
+                            exportBoxMesh.rotation.set(Math.PI / 2, 0, 0);
+            
+                            exportBoxMesh.position.set(scalePos.x, .72, scalePos.z);
+                            tempScene.add(exportBoxMesh);
+            
+                            changedLeft = false;
+                            changedRight = false;
+                            changedTop = false;
+                            changedBottom = false;
                         }
-                        if(!hasNeighbors.right && !changedRight) {
-                            scalePos.x -= scaleAmount
-                            scaleDims.x -= scaleAmount
-                            changedRight = true;
-                        }
-                        if(!hasNeighbors.top && !changedTop) {
-                            scalePos.z -= scaleAmount;
-                            scaleDims.z -= scaleAmount;
-                            changedTop = true;
-                        }
-                        if(!hasNeighbors.bottom && !changedBottom) {
-                            console.log("Has neighbor under")
-                            scalePos.z += scaleAmount;
-                            scaleDims.z -= scaleAmount;
-                            changedBottom = true;
-                        }
-                    
-                        var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
-                        var exportBoxMesh;
-                        exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
-                        var scaleNum = 1.15
-                        exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum * scaleDims.x, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum * scaleDims.z);
-                        exportBoxMesh.rotation.set(Math.PI / 2, 0, 0);
-        
-                        exportBoxMesh.position.set(scalePos.x, 1, scalePos.z);
-                        tempScene.add(exportBoxMesh);
-        
-                        changedLeft = false;
-                        changedRight = false;
-                        changedTop = false;
-                        changedBottom = false;
                         counter++;
                     }
                 }
-            }
-        });
-        loader.load( 'photos/deact_coupl.stl', function (inputGeometry) {
-            counter = 0;
-            for(var i = 0; i < scene.children.length; i++) {
-                if(scene.children[i].name == "Grid Box" && scene.children[i].material.opacity == 0) {
-                    var exportBoxMaterial = new THREE.MeshBasicMaterial({color: (elasticity / 100) * 0xFFFFFF});
-                    var exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
-                    var scaleNum = 1.15
-                    exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum);
-                    exportBoxMesh.rotation.set(Math.PI / 2, 0, 0);
-                    exportBoxMesh.position.set(scene.children[i].position.x, .75, scene.children[i].position.z);
-                    tempScene.add(exportBoxMesh);
-                }
-            }
-            console.log(tempScene);
-            tempScene.scale.set(25.4, 25.4, 25.4)
-            sleep(2000)
-    
-            //For some reason with STLExporter, you need to give it a renderer for it to export the scene properly
-            var renderer2 = new THREE.WebGLRenderer({antialias: true});
-            renderer2.setClearColor("#f5f5f5");
-            renderer2.setSize(window.innerWidth,window.innerHeight);
-            renderer2.render(tempScene, camera);
-    
-            var exporter = new THREE.STLExporter();
-            var str = exporter.parse(tempScene); // Export the scene
-            var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
-            saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+                // scene.add(tempScene)
+
+                tempScene.scale.set(25.4, 25.4, 25.4)
+                // sleep(2000)
+        
+                //For some reason with STLExporter, you need to give it a renderer for it to export the scene properly
+                var renderer2 = new THREE.WebGLRenderer({antialias: true});
+                renderer2.setClearColor("#f5f5f5");
+                renderer2.setSize(window.innerWidth,window.innerHeight);
+                renderer2.render(tempScene, camera);
+        
+                var exporter = new THREE.STLExporter();
+                var str = exporter.parse(tempScene); // Export the scene
+                var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
+                saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+            }); 
         });
 }
 
@@ -673,7 +523,6 @@ function changeGridSize() {
     for(var i = 0; i < scene.children.length; i++) {
         if(scene.children[i].name == "Grid Box" || scene.children[i].name == "Grid Lines") {
             scene.remove(scene.children[i]);
-            console.log("removed");
         }
     }
 
@@ -720,8 +569,8 @@ function changeSelectedIslands(toElasticity) {
     }
 
     //Change the color of all objects in selected group
-    changeStylesheetRule(document.styleSheets[0], ".selectorSquare", "background-color", rgbToHex(selectedIslands[0].material.color));
-    document.getElementById("newElasticityInput").value = selectedIslands[0].material.name
+    // changeStylesheetRule(document.styleSheets[0], ".selectorSquare", "background-color", rgbToHex(selectedIslands[0].material.color));
+    // document.getElementById("newElasticityInput").value = selectedIslands[0].material.name
 
 
     for(var i = 0; i < selectedIslands.length; i++) {
@@ -734,12 +583,12 @@ function changeSelectedIslands(toElasticity) {
 function changeAllElasticities() {
     for(var i = 0; i < elasticityObjectsForPhysics.length; i++) {
         var objColor = elasticityObjectsForPhysics[i].material.color;
-        if(objColor.r == 0 && objColor.g == 0 && objColor.b == 0) {
-            elasticityObjectsForPhysics[i].material.name = document.getElementById("newElasticityInput").value;
-            elasticityObjectsForPhysics[i].material.color.setHex(hsvToRgb((document.getElementById("newElasticityInput").value/100), 1, 1));
-            console.log(elasticityObjectsForPhysics[i]);
+        if(objColor.r == 0 && objColor.g == 0 && objColor.b == 0 && elasticityObjectsForPhysics[i].material.opacity == 1) {
+            elasticityObjectsForPhysics[i].material.name = elasticity;
+            elasticityObjectsForPhysics[i].material.color.setHex(hsvToRgb((elasticity/100), 1, 1));
         }
     }
+    updateElasticityDisplay()
 }
 
 function removeSelectedRegions() {
@@ -747,11 +596,14 @@ function removeSelectedRegions() {
 
     for(var i = 0; i < elasticityObjectsForPhysics.length; i++) {
         var objColor = elasticityObjectsForPhysics[i].material.color;
-        if(objColor.r == 0 && objColor.g == 0 && objColor.b == 0) {
+        if(objColor.r == 0 && objColor.g == 0 && objColor.b == 0 && elasticityObjectsForPhysics[i].material.opacity == 1) {
+            console.log(elasticityObjectsForPhysics[i])
+            console.log("Updated")
             elasticityObjectsForPhysics[i].material.transparent = true;
             elasticityObjectsForPhysics[i].material.opacity = 0;
             tempArray.splice(elasticityObjectsForPhysics.indexOf(elasticityObjectsForPhysics[i]), 1);
         }
     }
     elasticityObjectsForPhysics = tempArray;
+    updateElasticityDisplay();
 }
