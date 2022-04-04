@@ -1,6 +1,5 @@
 let physicsWorld, rigidBodies = [], tmpTrans = null
 let prevVelocityY = [];
-let isSimulating = false;
 let cbContactResult;
 let ballsGlobal = []
 let ballElasiticitys = []

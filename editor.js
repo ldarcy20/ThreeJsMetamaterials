@@ -23,6 +23,7 @@ var gridBoxSize = .25
 var sketchPlane, intersects;
 var addMode = false;
 var deleteMode = false;
+var isSimulating = false;
 var boxGeoList = []
 var islandObjects = [];
 var physicsBlocks = [];
@@ -143,10 +144,6 @@ function addEventListeners() {
         } else if(e.which == 3) {
             rightClickPressed = true;
         }
-
-        if(!(addMode || deleteMode) && !isSimulating) {
-            selectIsland(e);
-        }
     });
     document.addEventListener('mousedown', (e) => {
         isMouseDown = true;
@@ -175,6 +172,7 @@ function addEventListeners() {
     document.addEventListener('mousemove', onDocumentMouseMove, false);
     document.getElementById('myRange').addEventListener('change', rangeMassChanged, false);
     document.getElementById('elasticitySlider').addEventListener('input', elasticitySliderChanged, false);
+    document.getElementById('togglePhysics').addEventListener('click', togglePhysicsSimulator, false);
 }
 
 /* Export threeJS scene to JSON file */
@@ -299,8 +297,10 @@ function exportObjects() {
     var numIslands = numOfIslands();
     var tempScene = new THREE.Scene();
     var scalePos = {x: 0, z: 0}
-    var scaleDims = {x: 1, z: 1}
-    var scaleAmount = .05; //For 1 mm: (.039 / 2) (That is per object)
+    var couplOffsetX = -.13
+    var couplOffsetZ = -.13
+    var deactOffsetX = .01;
+    var deactOffsetZ = -.02;
     var changedLeft = false;
     var changedRight = false;
     var changedTop = false;
@@ -319,7 +319,6 @@ function exportObjects() {
                     var posX = islandObjects[island][currPlane].position.x;
                     var posY = islandObjects[island][currPlane].position.y;
                     var posZ = islandObjects[island][currPlane].position.z;
-                    console.log(posX + " " + posY + " " + posZ)
                     var material = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
                     var tempMesh = new THREE.Mesh( inputGeometry, material );
                     // tempMesh.position.set( islandObjects[island][currPlane].position.x, islandObjects[island][currPlane].position.y, islandObjects[island][currPlane].position.z);
@@ -363,7 +362,7 @@ function exportObjects() {
         var exporter2 = new THREE.STLExporter();
         var str2 = exporter2.parse(tempScene2); // Export the scene
         var blob2 = new Blob( [str2], { type : 'text/plain' } ); // Generate Blob from the string
-        saveAs( blob2, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+        // saveAs( blob2, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
     });
 
 
@@ -375,29 +374,25 @@ function exportObjects() {
                     if(randomNumArray[counter] >= .5) {
                         scalePos.x = islandObjects[island][currPlane].position.x;
                         scalePos.z = islandObjects[island][currPlane].position.z;
-                        scaleDims.x = 1
-                        scaleDims.z = 1
             
                         // var exportBoxGeo = new THREE.BoxGeometry(scaleDims.x, exportBoxHeight, scaleDims.z);
                         var exportBoxMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
                         var exportBoxMesh;
                         exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
                         var scaleNum = 1.15
-                        exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum * scaleDims.x, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum * scaleDims.z);
+                        exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum);
                         exportBoxMesh.rotation.set(Math.PI / 2, 0, 0);
-        
-                        exportBoxMesh.position.set(scalePos.x, 1, scalePos.z);
+                        exportBoxMesh.position.set(scalePos.x + couplOffsetX, .55, scalePos.z + couplOffsetZ);
+                        
+                        // Get whether this box object has neighbors and save that to dictionary
+                        var hasNeighborsDict = boxHasNeighbors(islandObjects[island][currPlane])
+                        exportBoxMesh = adjustEdges(exportBoxMesh, islandObjects[island][currPlane], hasNeighborsDict)
+
                         tempScene.add(exportBoxMesh);
-        
-                        changedLeft = false;
-                        changedRight = false;
-                        changedTop = false;
-                        changedBottom = false;
                     }
                     counter++;
                 }
             }
-            console.log(randomNumArray)
 
             loader.load( 'photos/deact_coupl.stl', function (inputGeometry) {
                 counter = 0;
@@ -405,18 +400,20 @@ function exportObjects() {
                     for(var currPlane = 0; currPlane < islandObjects[island].length; currPlane++) {
                         if(randomNumArray[counter] < .5) {
                             scalePos.x = islandObjects[island][currPlane].position.x;
-                            scalePos.z = islandObjects[island][currPlane].position.z;
-                            scaleDims.x = 1
-                            scaleDims.z = 1                    
+                            scalePos.z = islandObjects[island][currPlane].position.z;                 
                         
                             var exportBoxMaterial = new THREE.MeshBasicMaterial({color: 0xFF0000});
                             var exportBoxMesh;
                             exportBoxMesh = new THREE.Mesh(inputGeometry, exportBoxMaterial);
-                            var scaleNum = .97
-                            exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum * scaleDims.x, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum * scaleDims.z);
+                            var scaleNum = 1.15
+                            exportBoxMesh.scale.set((1/(25.4 * 4)) * scaleNum, 1/(25.4 * 4) * scaleNum, (1/(25.4 * 4)) * scaleNum);
                             exportBoxMesh.rotation.set(Math.PI / 2, 0, 0);
             
-                            exportBoxMesh.position.set(scalePos.x, .72, scalePos.z);
+                            exportBoxMesh.position.set(scalePos.x + deactOffsetX, +.01, scalePos.z + deactOffsetZ);
+
+                            var hasNeighborsDict = boxHasNeighbors(islandObjects[island][currPlane])
+                            exportBoxMesh = adjustEdges(exportBoxMesh, islandObjects[island][currPlane], hasNeighborsDict)
+                            
                             tempScene.add(exportBoxMesh);
             
                             changedLeft = false;
@@ -430,7 +427,6 @@ function exportObjects() {
                 // scene.add(tempScene)
 
                 tempScene.scale.set(25.4, 25.4, 25.4)
-                // sleep(2000)
         
                 //For some reason with STLExporter, you need to give it a renderer for it to export the scene properly
                 var renderer2 = new THREE.WebGLRenderer({antialias: true});
@@ -441,9 +437,58 @@ function exportObjects() {
                 var exporter = new THREE.STLExporter();
                 var str = exporter.parse(tempScene); // Export the scene
                 var blob = new Blob( [str], { type : 'text/plain' } ); // Generate Blob from the string
-                saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
+                // saveAs( blob, (makeid(10).concat(".stl"))); //Save the Blob to file.stl
             }); 
         });
+}
+
+function adjustEdges(adjustMesh, adjustMeshPlane, neighborsDict) {
+    constructiveGeoms = []
+    var csgBoxSize = .25
+    var edgeX = adjustMeshPlane.position.x
+    var edgeZ = adjustMeshPlane.position.z
+    // const adjustMeshCSG = new ThreeBSP(adjustMesh)
+
+    if(!neighborsDict["left"]) {
+        var leftConstructMesh = new THREE.Mesh( new THREE.BoxGeometry( csgBoxSize / 8, csgBoxSize, csgBoxSize ), new THREE.MeshBasicMaterial( {color: 0x00ff00} ) );
+        leftConstructMesh.position.set(edgeX - (gridBoxSize / 2), 0, edgeZ)
+
+        // const leftConstructMeshCSG = new ThreeBSP(leftConstructMesh);
+        // adjustMeshCSG = adjustMeshCSG.subtract(leftConstructMeshCSG)
+        scene.add(leftConstructMesh)
+    }
+
+    if(!neighborsDict["right"]) {
+        var rightConstructMesh = new THREE.Mesh( new THREE.BoxGeometry( csgBoxSize / 8, csgBoxSize, csgBoxSize ), new THREE.MeshBasicMaterial( {color: 0x00ff00} ) );
+        rightConstructMesh.position.set(edgeX + (gridBoxSize / 2), 0, edgeZ)
+
+        // var rightConstructMeshCSG = new ThreeBSP(rightConstructMesh)
+        // adjustMeshCSG = adjustMeshCSG.subtract(rightConstructMeshCSG)
+        scene.add(rightConstructMesh)
+    }
+
+    if(!neighborsDict["top"]) {
+        var topConstructMesh = new THREE.Mesh( new THREE.BoxGeometry( csgBoxSize, csgBoxSize, csgBoxSize / 8 ), new THREE.MeshBasicMaterial( {color: 0x00ff00} ) );
+        topConstructMesh.position.set(edgeX, 0, edgeZ - (gridBoxSize / 2))
+
+        // var topConstructMeshCSG = new ThreeBSP(topConstructMesh)
+        // adjustMeshCSG = adjustMeshCSG.subtract(topConstructMeshCSG)
+        scene.add(topConstructMesh)
+    }
+
+    if(!neighborsDict["bottom"]) {
+        var bottomConstructMesh = new THREE.Mesh( new THREE.BoxGeometry(  csgBoxSize, csgBoxSize, csgBoxSize / 8 ), new THREE.MeshBasicMaterial( {color: 0x00ff00} ) );
+        bottomConstructMesh.position.set(edgeX, 0, edgeZ + (gridBoxSize / 2))
+
+        // var bottomConstructMeshCSG = new ThreeBSP(bottomConstructMesh)
+        // adjustMeshCSG = adjustMeshCSG.subtract(bottomConstructMeshCSG)
+        scene.add(bottomConstructMesh)
+    }
+
+    // var returnAdjustMesh = adjustMeshCSG.toMesh()
+    // islandNum = 
+    // return returnAdjustMesh;
+    return adjustMesh
 }
 
 function sleep(milliseconds) {
@@ -455,20 +500,26 @@ function sleep(milliseconds) {
     }
   }
 
-/* Checks if a box has any neighbors and which ones it has */
-function boxHasNeighbors(currObject, islandNum) {
-    var islandIndex = 0;
+/* Checks if a box has any neighbors and which ones it has
+* Num of islands should be called before using this function
+*/
+function boxHasNeighbors(currObject) {
+    var islandIndex = -1;
+    var islandNum = -1;
     var leftVal = true;
     var rightVal = true;
     var topVal = true;
     var bottomVal = true;
-    var topLeftVal = true;
-    var topRightVal = true;
-    var bottomLeftVal = true;
-    var bottomRightVal = true;
 
     for(var i = 0; i < boxGeoList.length; i++) {
         if(boxGeoList[i] == currObject) islandIndex = i;
+    }
+
+    for(var i = 0; i < islandObjects.length; i++) {
+        if(islandObjects[i].includes(boxGeoList[islandIndex])) {
+            islandNum = i;
+            break;
+        }
     }
 
     if(islandIndex % gridSizeX > 0) { //is to the left
@@ -478,42 +529,25 @@ function boxHasNeighbors(currObject, islandNum) {
 
     }
 
-    if(islandIndex % gridSizeX < (gridSizeX - 1)) { //is to right
+    if(islandIndex % gridSizeX < (gridSizeX - 1)) { // is to right
         if(!islandObjects[islandNum].includes(boxGeoList[islandIndex + 1])) {
             rightVal = false;
         }
 
     }
 
-    if(islandIndex > (gridSizeY - 1)) { //is under
-        if(!islandObjects[islandNum].includes(boxGeoList[islandIndex - gridSizeY])) {
+    if(islandIndex < (gridSizeY - 1) * gridSizeX) { // is under
+        if(!islandObjects[islandNum].includes(boxGeoList[islandIndex + gridSizeY])) {
             bottomVal = false;
         }
 
     }
-    if(islandIndex < (gridSizeY - 1) * gridSizeX) { //is on top
-        if(!islandObjects[islandNum].includes(boxGeoList[islandIndex + gridSizeY])) {
+    if(islandIndex > (gridSizeY - 1)) { // is on top
+        if(!islandObjects[islandNum].includes(boxGeoList[islandIndex - gridSizeY])) {
             topVal = false;
         }
     }
-
-    //add edge cases later
-    if(!leftVal && !topVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) - gridSizeY])) {
-        topLeftVal = false;
-    }
-
-    if(rightVal && topVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) - gridSizeY])) {
-        topRightVal = false;
-    }
-
-    if(leftVal && bottomVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex + 1) + gridSizeY])) {
-        bottomLeftVal = false;
-    }
-
-    if(rightVal && bottomVal && !islandObjects[islandNum].includes(boxGeoList[(islandIndex - 1) + gridSizeY])) {
-        bottomRightVal = false;
-    }
-    return {left: leftVal, right: rightVal, top: topVal, bottom: bottomVal, topLeft: topLeftVal, bottomLeft: bottomLeftVal, topRight: topRightVal, bottomRight: bottomRightVal};
+    return {left: leftVal, right: rightVal, top: topVal, bottom: bottomVal};
 }
 
 function changeGridSize() {

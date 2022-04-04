@@ -70,6 +70,8 @@ function toggleSketchMode(addOrDelete) {
 }
 function togglePhysicsSimulator() {
     isSimulating = !isSimulating;
+    console.log("Toggled")
+    console.log(isSimulating)
     setupContactResultCallback();
     createBall();
     renderFrame();
@@ -158,12 +160,15 @@ function updateElasticityDisplay() {
 }
 
 function checkBallPos() {
+    console.log(isSimulating)
     if(isSimulating) {
         objectsOverlapped = raycaster.intersectObjects(scene.children);
         for(var i = 0; i < objectsOverlapped.length; i++) {
-            if(intersects[i].object.name == "Grid Box") {
-                createBall({x: intersects[i].object.position.x, y: 4, z: intersects[i].object.position.z});
-                ballElasiticitys.push(intersects[i].object.material.name / 100);
+            console.log(objectsOverlapped)
+            if(objectsOverlapped[i].object.name == "Grid Box") {
+                console.log("Creating balls")
+                createBall({x: objectsOverlapped[i].object.position.x, y: 4, z: objectsOverlapped[i].object.position.z});
+                ballElasiticitys.push(objectsOverlapped[i].object.material.name / 100);
                 renderFrame();
             }
         }

@@ -81,13 +81,13 @@
 
           <div id='menuCtrlFormDiv2'>
             <div id="menuCtrlForm2" class="menuForm simulate hidden">
-              <button class="menuButton2 importStl" onClick="togglePhysicsSimulator()">Simulate Mode</button>
+              <button class="menuButton2 importStl" id="togglePhysics">Simulate Mode</button>
               <button class="menuButton2 clearBallsButton" onClick="clearAllBalls()">Clear Balls</button>
-              <div class="slidecontainer" style="position:absolute">
+              <div class="slidecontainer" style="position:absolute; margin-top:80px;">
                 <input type="range" min="0" max="150" value="50" class="rangeMassSlider" id="myRange">
               </div>
               <img src="photos/feather.png" style="position:absolute;width:25px; height:25px; margin-top:77px; margin-left:2px">
-              <img src="photos/kettlebell.png" style="position:absolute;width:25px; margin-top:72px; margin-left:272px">
+              <img src="photos/kettlebell.png" style="position:absolute;width:25px; margin-top:77px; margin-left:272px">
               <input class="textInput" style="position:absolute; margin-left:130px; margin-top:110px; background-color:rgba(0, 0, 0, 0); border: none" id="rangeMassText" value="50"></div>
             </div>
           </div>
@@ -119,6 +119,7 @@
     <script src="js/FileSaver.js"></script>
     <script src="js/STLExporter.js"></script>
     <script src="js/STLLoader.js"></script>
+    <script src="js/three-csg.js"></script>
     <script src="physicsSim.js"></script>
     <script src="sketchMode.js"></script>
     <script src="editor.js"></script>
