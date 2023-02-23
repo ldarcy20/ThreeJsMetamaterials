@@ -1,3 +1,5 @@
+Demo link: https://ldarcy20.github.io/ThreeJsMetamaterials/editor
+
 - Run using Visual Studio Code
 - Install LiveServer by Ritwick Dey
     -https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer
